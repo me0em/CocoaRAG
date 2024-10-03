@@ -1,0 +1,3 @@
+embeddings_model:
+  open_ai:
+    token: ...
