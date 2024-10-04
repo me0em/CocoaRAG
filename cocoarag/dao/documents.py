@@ -1,4 +1,4 @@
-# document.py
+# dao/document.py
 import yaml
 from uuid import uuid4
 from box import Box
@@ -8,6 +8,56 @@ from langchain_core.documents import Document
 from langchain_postgres import PGVector
 
 from cocoarag.models.documents import DocumentModel
+
+
+class DocumentDAO:
+    def __init__(self, config_path="../configs/credits.yml"):
+        self.config = self._load_config(config_path)
+        self.embeddings = OpenAIEmbeddings(
+            model="text-embedding-3-small",
+            api_key=self.config.embeddings_model.open_ai.token
+        )
+        self.connection = "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"  # Uses psycopg3!
+
+    def _load_config(self, path) -> Box:
+        """Load config and return it as a Box representation."""
+        with open(path, "r") as file:
+            data: dict = yaml.safe_load(file)
+        return Box(data)
+
+    def add_documents(self, documents: list[DocumentModel], user_group: str):
+        """Add documents to the vector store."""
+        vector_store = PGVector(
+            embeddings=self.embeddings,
+            collection_name=user_group,
+            connection=self.connection,
+            use_jsonb=True,
+        )
+
+        docs = [
+            Document(page_content=doc.content, metadata=doc.metadata)
+            for doc in documents
+        ]
+
+        vector_store.add_documents(
+            docs,
+            ids=[doc.metadata["id"] for doc in docs]
+        )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def _load_config(path="../configs/credits.yml") -> Box:
@@ -27,6 +77,7 @@ embeddings = OpenAIEmbeddings(
 )
 
 connection = "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"  # Uses psycopg3!
+
 
 
 # TODO: maybe add_chunks_dao?
