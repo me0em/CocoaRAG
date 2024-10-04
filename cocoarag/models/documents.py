@@ -32,3 +32,10 @@ class DocumentModel(BaseModel):
             raise ValueError("File is too small. The minimum allowed file size is 512 bytes.")
 
         return v
+
+
+class ChunkModel(DocumentModel):
+    """ A model representing a chunk of a document.
+    Inherits all attributes and methods from DocumentModel.
+    """
+    pass

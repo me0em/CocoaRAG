@@ -1,4 +1,5 @@
 # dao/document.py
+from typing import Optional
 import yaml
 from uuid import uuid4
 from box import Box
@@ -7,7 +8,9 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_core.documents import Document
 from langchain_postgres import PGVector
 
-from cocoarag.models.documents import DocumentModel
+import psycopg
+
+from cocoarag.models.documents import DocumentModel, ChunkModel
 
 
 class DocumentDAO:
@@ -18,6 +21,13 @@ class DocumentDAO:
             api_key=self.config.embeddings_model.open_ai.token
         )
         self.connection = "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"  # Uses psycopg3!
+        self.connection_params = {
+            "dbname": "langchain",
+            "user": "langchain",
+            "password": "langchain",
+            "host": "localhost",
+            "port": "6024"
+        }
 
     def _load_config(self, path) -> Box:
         """Load config and return it as a Box representation."""
@@ -25,8 +35,13 @@ class DocumentDAO:
             data: dict = yaml.safe_load(file)
         return Box(data)
 
-    def add_documents(self, documents: list[DocumentModel], user_group: str):
-        """Add documents to the vector store."""
+    def add_chunks(self,
+                   chunks: list[ChunkModel],
+                   user_group: str) -> None:
+        """Add chunks to the vector store.
+        Use with `self.add_document` to have a
+        relation: collection>document>chunks
+        """
         vector_store = PGVector(
             embeddings=self.embeddings,
             collection_name=user_group,
@@ -34,15 +49,42 @@ class DocumentDAO:
             use_jsonb=True,
         )
 
-        docs = [
-            Document(page_content=doc.content, metadata=doc.metadata)
-            for doc in documents
+        langchain_docs = [
+            Document(page_content=chunk.content, metadata=chunk.metadata)
+            for chunk in chunks
         ]
 
         vector_store.add_documents(
-            docs,
-            ids=[doc.metadata["id"] for doc in docs]
+            langchain_docs,
+            ids=[doc.metadata["id"] for doc in langchain_docs]
         )
+
+    def add_document(self,
+                     user_group: str,
+                     document_id: str,
+                     title: str,
+                     document_metadata: Optional[str]) -> None:
+        """ Add document to the database.
+        Use with `self.add_chunks` to have a
+        relation: collection>document>chunks
+        """
+
+        # SQL command to insert data into the table
+        insert_data_sql = """
+        INSERT INTO langchain_pg_document (id, collection_id, title, document_metadata)
+        VALUES (%s, %s, %s, %s);
+        """
+
+        try:
+            # Connect to the PostgreSQL database
+            with psycopg.connect(**self.connection_params) as conn:
+                with conn.cursor() as cur:
+                    # Execute the SQL command to insert data into the table
+                    cur.execute(insert_data_sql, (document_id, user_group, title, document_metadata))
+                    conn.commit()
+                    print(f"Document inserted successfully with id: {id}")
+        except Exception as e:
+            print(f"Error inserting document: {e}")
 
 
 
