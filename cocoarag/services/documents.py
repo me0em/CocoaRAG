@@ -19,3 +19,20 @@ class DocumentService:
         # Example of using LangChain to process the document
         # processed_content = self.llm_chain.process(content)
         # return processed_content
+
+### Глянь, может это вещь!
+# from abc import ABC, abstractmethod
+# from typing import Optional, List
+
+# from cocoarag.models.documents import ChunkModel
+
+
+# class DocumentServiceInterface(ABC):
+
+#     @abstractmethod
+#     def add_document(self, user_group: str, document_id: str, title: str, document_metadata: Optional[str]) -> None:
+#         pass
+
+#     @abstractmethod
+#     def add_chunks(self, chunks: List[ChunkModel], user_group: str) -> None:
+#         pass
