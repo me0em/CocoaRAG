@@ -93,7 +93,7 @@ class AddDocumentToTableDAO(DAO):
                                  document.file_name,
                                  jsonable_metadata))
                     conn.commit()
-                    print(f"Document inserted successfully with id: {id}")
+                    print(f"Document inserted successfully with id: {document.metadata['id']}")
         except Exception as e:
             print(f"Error inserting document: {e}")
 
