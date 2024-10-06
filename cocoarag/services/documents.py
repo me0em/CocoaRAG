@@ -3,6 +3,32 @@ from dao.documents import DocumentDAO
 from models.documents import DocumentModel
 # from langchain import LLMChain  # Assuming LangChain has an LLMChain class
 
+
+class AddDocumentService:
+    """ Add document to the RAG system.
+
+    Services called inside:
+    - SplitDocumentService
+
+    TODO: ...
+    """
+    def __init__(self, document: DocumentModel) -> None:
+        self.document = document
+
+    def __call__(self):
+        # split doc:
+        ...
+
+        # create chunks (with id logic):
+        ...
+
+        # insert doc to the table
+        ...
+
+        # insert chunks
+        ...
+
+
 class DocumentService:
     def __init__(self):
         self.document_dao = DocumentDAO()

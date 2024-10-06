@@ -12,7 +12,7 @@ connection_params = {
 # SQL command to create the table
 create_table_sql = """
 CREATE TABLE IF NOT EXISTS document (
-    id SERIAL PRIMARY KEY,
+    id VARCHAR(255) NOT NULL,
     collection_id VARCHAR(255) NOT NULL,
     title VARCHAR(255) NOT NULL,
     document_metadata TEXT
