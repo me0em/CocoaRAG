@@ -12,10 +12,9 @@ connection_params = {
 # SQL command to create the table
 create_table_sql = """
 CREATE TABLE IF NOT EXISTS document (
-    id VARCHAR(255) NOT NULL,
+    user_id VARCHAR(255) NOT NULL,
     collection_id VARCHAR(255) NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    document_metadata TEXT
+    raw BYTEA NOT NULL,
 );
 """
 
@@ -28,7 +27,7 @@ def create_table():
                 # Execute the SQL command to create the table
                 cur.execute(create_table_sql)
                 conn.commit()
-                print("Table 'document' created successfully.")
+                print("Table 'files' created successfully.")
     except Exception as e:
         print(f"Error creating table: {e}")
 

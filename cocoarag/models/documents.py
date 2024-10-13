@@ -21,7 +21,7 @@ class DocumentModel(BaseModel):
                            description="UUID represents a single user interaction")
     file_name: str = Field(description="Filename")
     content: bytes = Field(description="Raw content")
-    metadata: dict  # TODO: validation & обязательные поля типа названия
+    metadata: dict
 
     @field_validator("content")
     @staticmethod
