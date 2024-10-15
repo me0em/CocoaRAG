@@ -10,3 +10,6 @@ database:
   port: '6024'
   container_name: 'pgvector-container'
   connection_string: "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"
+quering:
+  basic_collection_name: "general"
+  k: 10

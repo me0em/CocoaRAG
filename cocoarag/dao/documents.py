@@ -1,71 +1,10 @@
 # dao/document.py
-from typing import Optional, Any
-import os
-import json
-import yaml
 from uuid import uuid4
-from box import Box
-
-from langchain_openai import OpenAIEmbeddings
 from langchain_core.documents import Document
-from langchain_postgres import PGVector
-
 import psycopg
 
 from cocoarag.models.documents import DocumentModel, ChunkModel
-
-
-class DAO:
-    def __init__(self, config_path="../configs/credits.yml"):
-        self.config = self._load_config(config_path)
-        self.embeddings = OpenAIEmbeddings(
-            model=self.config.embeddings_model.open_ai.embed_model,
-            api_key=self.config.embeddings_model.open_ai.token
-        )
-        self.connection_string = self.config['database']['connection_string']
-        self.connection_params = {
-            "dbname": self.config['database']['dbname'],
-            "user": self.config['database']['user'],
-            "password": self.config['database']['password'],
-            "host": self.config['database']['host'],
-            "port": self.config['database']['port']
-        }
-
-    def _load_config(self, path) -> Box:
-        """Load config and return it as a Box representation."""
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        config_path = os.path.join(script_dir, path)
-        config_path = os.path.normpath(config_path)
-        try:
-            with open(config_path, "r") as file:
-                data: dict = yaml.safe_load(file)
-            return Box(data)
-        except Exception as e:
-            print(f"Error loading configuration file: {e}")
-            raise       
-    
-    def get_connection(self):
-        try:
-            conn = psycopg.connect(**self.connection_params)
-            return conn
-        except Exception as e:
-            print(f"Error connecting to database: {e}")
-            raise
-
-    def get_vector_store(self, collection_name: str):
-        try:
-            vector_store = PGVector(
-                connection=self.connection_string,
-                embeddings=self.embeddings,
-                collection_name=collection_name,
-                use_jsonb=True,
-            )
-            return vector_store
-        except Exception as e:
-            print(f"Error connecting to database: {e}")
-            raise
-
-    def __call__(*args, **kwargs) -> Any: ...
+from cocoarag.dao.base import DAO
 
 
 class AddChunksToVectorStoreDAO(DAO):
@@ -93,8 +32,16 @@ class AddChunksToVectorStoreDAO(DAO):
 
         vector_store.add_documents(
             langchain_docs,
-            ids=[doc.metadata["id"] for doc in langchain_docs]
+            ids=[doc.metadata["chunk_id"] for doc in langchain_docs]
         )
+
+        # TODO:
+        # GetRealCollectionIDDAO()
+        # SELECT collection_id FROM ...
+
+        # TODO:
+        # AddToUserTableDocumentWithThisUUIDDAO()
+        ...
 
         # ~~~ Attention! ~~~
         # Because of autism of Langchain developers,
@@ -139,6 +86,32 @@ class UpdateCollectionInfoDAO(DAO):
                     cur.execute(update_data_sql, (user_id, user_group, collection_name))
                     conn.commit()
                     print(f"Document updated successfully with id: {collection_name}")
+        except Exception as e:
+            print(f"Error inserting document: {e}")
+
+        # ~~Attention!~~
+        # We need a single collection_name for all documents
+        # to query vector store correctly, so we
+        # update collection_name after we use it to add
+        # real document id to users table
+        update_again_data_sql = """
+            UPDATE langchain_pg_collection
+            SET name = %s
+            WHERE name = %s;
+        """
+        try:
+            # Connect to the PostgreSQL database
+            with psycopg.connect(**self.connection_params) as conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        update_again_data_sql,
+                        (
+                            self.config.quering.basic_collection_name,
+                            collection_name
+                        )
+                    )
+                    conn.commit()
+                    print("Document collection_name reupdated successfully")
         except Exception as e:
             print(f"Error inserting document: {e}")
 
@@ -202,20 +175,28 @@ class AddFileDAO(DAO):
 #             print(f"Error inserting document: {e}")
 
 
-
 if __name__ == "__main__":
+    filename = "King Arthur"
     dummy_chunks = [
         ChunkModel(
             content="The king is dead.".encode('utf-8'),
             trace_id=uuid4().hex,
-            file_name="XXX",
-            metadata={"topic": "dummy2", "id": "x2"}
+            file_name=filename,  # useless
+            metadata={
+                "filename": filename,
+                "topic": "dummy",
+                "chunk_id": "id1",
+            }
         ),
         ChunkModel(
             content="Long live the king!".encode('utf-8'),
             trace_id=uuid4().hex,
-            file_name="XXX",
-            metadata={"topic": "dummy2", "id": "x1"}
+            file_name=filename,  # useless
+            metadata={
+                "filename": filename,
+                "topic": "dummy",
+                "chunk_id": "id2",
+            }
         ),
     ]
 
@@ -232,7 +213,6 @@ if __name__ == "__main__":
     print("Insert chunks to the vector store")
 
 
-    
     # dummy_document = DocumentModel(
     #     trace_id=uuid4().hex,
     #     file_name="p3ty4",
@@ -244,4 +224,3 @@ if __name__ == "__main__":
     # accessor = AddDocumentToTableDAO()
     # accessor(user_group="test", document=dummy_document)
     # print("Insert document to the database")
-
