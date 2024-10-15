@@ -29,3 +29,10 @@ class QueryModel(BaseModel):
             raise ValueError("Query is too small.")
 
         return v
+
+
+class AnswerModel(QueryModel):
+    """ Same as QueryModel, but
+    used for storing model answers
+    """
+    pass

@@ -2,7 +2,7 @@ from langchain_core.documents import Document
 
 from cocoarag.dao.base import DAO
 from cocoarag.models.documents import ChunkModel
-from cocoarag.models.query import QueryModel
+from cocoarag.models.queries import QueryModel
 
 
 class SimilaritySearchDAO(DAO):
@@ -17,19 +17,29 @@ class SimilaritySearchDAO(DAO):
             self.config.quering.basic_collection_name
         )
 
-        langchain_docs: list[Document] = vector_store.similarity_search(
+        # scored_langchain_docs is [(Document, float), ...]
+        scored_langchain_docs = vector_store.similarity_search_with_relevance_scores(
             query.content,
             k=self.config.quering.k,
             filter=filters,
         )
 
+        # print(langchain_docs)
+        # print(vector_store.similarity_search_with_relevance_scores)
+        # print(vector_store.similarity_search_with_relevance_scores.__doc__)
+        # print(langchain_docs)
+        # d = langchain_docs[0]
+        # print(d)
+        # print(d.__dir__())
+
         chunks = []
-        for doc in langchain_docs:
+        for doc, score in scored_langchain_docs:
             chunk = ChunkModel(
                 trace_id=query.trace_id,
                 file_name=doc.metadata.get("filename", "Error"),
                 content=doc.page_content.encode("utf-8"),
-                metadata=doc.metadata
+                metadata=doc.metadata,
+                score=score
             )
 
             chunks.append(chunk)

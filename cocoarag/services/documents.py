@@ -4,8 +4,7 @@ from uuid import uuid4
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from cocoarag.dao.documents import (
-    AddChunksToVectorStoreDAO,
-    AddDocumentToTableDAO
+    AddChunksToVectorStoreDAO
 )
 from cocoarag.models.documents import (
     DocumentModel,

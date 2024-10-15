@@ -1,5 +1,6 @@
 # models.py
 from pydantic import BaseModel, Field, field_validator
+from typing import Optional
 from uuid import UUID, uuid4
 
 
@@ -38,4 +39,4 @@ class ChunkModel(DocumentModel):
     """ A model representing a chunk of a document.
     Inherits all attributes and methods from DocumentModel.
     """
-    pass
+    score: Optional[float]
