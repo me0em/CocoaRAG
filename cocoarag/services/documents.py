@@ -62,19 +62,20 @@ class AddDocumentService:
     - AddChunksToVectorStoreDAO
     """
     def __call__(self,
-                 document: DocumentModel,
-                 user_group: str):
+                 user_id: str,
+                 user_group: str,
+                 document: DocumentModel) -> None:
         # split document content:
         service = SplitTextRecursivelyService()
         chunks: list[ChunkModel] = service(document)
 
-        # insert doc to the table
-        accessor = AddDocumentToTableDAO()
-        accessor(user_group=user_group, document=document)
-
-        # insert chunks
+        # insert chunks to the table
         accessor = AddChunksToVectorStoreDAO()
-        accessor(user_group=user_group, chunks=chunks)
+        accessor(
+            user_id=user_id,
+            user_group=user_group,
+            chunks=chunks
+        )
 
 
 if __name__ == "__main__":
