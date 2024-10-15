@@ -37,6 +37,11 @@ class QueryRAGSystemService:
             filters=filters
         )
 
+        # TODO: understand how work RAG chain in
+        # canonical one-line solutions and do the same
+        # wrt our architecture
+        ...
+
 
 if __name__ == "__main__":
     str_query = "What happend to King?"
@@ -54,9 +59,3 @@ if __name__ == "__main__":
     )
 
     print(chunks)
-
-    # print("========")
-
-    # print(chunks[0].metadata)
-
-    # print("========")
