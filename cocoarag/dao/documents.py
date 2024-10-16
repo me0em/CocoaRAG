@@ -145,37 +145,39 @@ class AddFileDAO(DAO):
             print(f"Error inserting document: {e}")
 
 
-# class AddDocumentToTableDAO(DAO):
-#     """ Add document to the database.
-#         Use with `AddChunksToVectorStoreDAO` to have a
-#         relation: collection>document>chunks
-#     """
-#     def __call__(self,
-#                  user_group: str,
-#                  document: DocumentModel) -> None:
-#         # SQL command to insert data into the table
-#         insert_data_sql = """
-#         INSERT INTO document
-#         (id, collection_id, title, document_metadata)
-#         VALUES (%s, %s, %s, %s);
-#         """
-#         try:
-#             # Connect to the PostgreSQL database
-#             with psycopg.connect(**self.connection_params) as conn:
-#                 with conn.cursor() as cur:
-#                     jsonable_metadata = json.dumps(document.metadata)
-#                     cur.execute(insert_data_sql,
-#                                 (document.metadata["id"],
-#                                  user_group,
-#                                  document.file_name,
-#                                  jsonable_metadata))
-#                     conn.commit()
-#                     print(f"Document inserted successfully with id: {document.metadata['id']}")
-#         except Exception as e:
-#             print(f"Error inserting document: {e}")
+class RemoveDocumentDAO(DAO):
+    """ Remove document from langchain_pg_collection
+    table which leads to removing all related chunks
+    from langchain_pg_embedding
+    """
+    def __call__(self,
+                 document_id: str) -> None:
+        # SQL command to insert data into the table
+        remove_data_sql = """
+            DELETE FROM langchain_pg_collection
+            WHERE uuid = %s;
+        """
+        try:
+            # Connect to the PostgreSQL database
+            with psycopg.connect(**self.connection_params) as conn:
+                with conn.cursor() as cur:
+                    cur.execute(remove_data_sql,
+                                (document_id, ))
+                    conn.commit()
+                    print(f"Document removed successfully with id: {document_id}")
+        except Exception as e:
+            print(f"Error inserting document: {e}")
 
 
 if __name__ == "__main__":
+
+    accessor = RemoveDocumentDAO()
+    accessor(document_id="5c921580-0a60-4240-ae24-0aac717bbbba")
+
+
+    exit()
+
+
     filename = "King Arthur"
     dummy_chunks = [
         ChunkModel(

@@ -157,14 +157,3 @@ if __name__ == "__main__":
     )
 
     print(answer)
-
-
-    # service = GetSimilarChunksService()
-    # chunks = service(
-    #     user_id=uuid4().hex,
-    #     group_id=uuid4().hex,
-    #     query=query,
-    #     filters={}
-    # )
-
-    # print(chunks)

@@ -77,6 +77,16 @@ class AddDocumentService:
         )
 
 
+class RemoveDocumentService:
+    """ Remove document from the RAG system.
+    """
+    def __call__(self,
+                 user_id: str,
+                 user_group: str,
+                 document_id: str) -> None:
+        ...
+
+
 if __name__ == "__main__":
     filepath = "../../dummy_files/bill-of-rights-analytics.txt"
 
