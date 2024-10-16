@@ -8,5 +8,4 @@ CONTEXT:
 {context_payload}
 
 QUESTION:
-{user_query}
 """
