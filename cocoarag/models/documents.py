@@ -39,4 +39,31 @@ class ChunkModel(DocumentModel):
     """ A model representing a chunk of a document.
     Inherits all attributes and methods from DocumentModel.
     """
-    score: Optional[float]
+    score: Optional[float] = None
+
+
+if __name__ == "__main__":
+    filename = "King Arthur"
+
+    dummy_chunk_wo_score = ChunkModel(
+        content="The king is dead.".encode('utf-8'),
+        trace_id=uuid4().hex,
+        file_name=filename,  # useless
+        metadata={
+            "filename": filename,
+            "topic": "dummy",
+            "chunk_id": "id1",
+        }
+    )
+
+    dummy_chunk_with_score = ChunkModel(
+        content="The king is dead.".encode('utf-8'),
+        trace_id=uuid4().hex,
+        file_name=filename,  # useless
+        metadata={
+            "filename": filename,
+            "topic": "dummy",
+            "chunk_id": "id1",
+        },
+        score=0.54
+    )
