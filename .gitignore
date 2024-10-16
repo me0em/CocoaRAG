@@ -1,0 +1,7 @@
+# Ignore Python bytecode files
+*.pyc
+*.pyo
+__pycache__/
+
+# Optionally, you can ignore all .log files or other temporary files
+*.log
