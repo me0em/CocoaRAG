@@ -1,0 +1,19 @@
+embeddings_model:
+  open_ai:
+    token: "sk-proj-CaQmXdDzM5UocOhHH9a4T3BlbkFJGuQaDNYBmBj4i1hvkSBo"
+    embed_model: "text-embedding-3-small"
+retrieve_model:
+  open_ai:
+    token: "sk-proj-CaQmXdDzM5UocOhHH9a4T3BlbkFJGuQaDNYBmBj4i1hvkSBo"
+    model: "gpt-3.5-turbo-0125"
+database:
+  dbname: 'langchain'
+  user: 'langchain'
+  password: 'langchain'
+  host: 'localhost'
+  port: '6024'
+  container_name: 'pgvector-container'
+  connection_string: "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"
+quering:
+  basic_collection_name: "general"
+  k: 10
