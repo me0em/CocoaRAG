@@ -2,10 +2,13 @@ embeddings_model:
   open_ai:
     token: "sk-proj-CaQmXdDzM5UocOhHH9a4T3BlbkFJGuQaDNYBmBj4i1hvkSBo"
     embed_model: "text-embedding-3-small"
+<<<<<<< HEAD
 retrieve_model:
   open_ai:
     token: "sk-proj-CaQmXdDzM5UocOhHH9a4T3BlbkFJGuQaDNYBmBj4i1hvkSBo"
     model: "gpt-3.5-turbo-0125"
+=======
+>>>>>>> RemoveDocumentService
 database:
   dbname: 'langchain'
   user: 'langchain'
@@ -16,4 +19,12 @@ database:
   connection_string: "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"
 quering:
   basic_collection_name: "general"
+<<<<<<< HEAD
   k: 10
+=======
+  k: 10
+retrieve_model:
+  open_ai:
+    token: "sk-proj-CaQmXdDzM5UocOhHH9a4T3BlbkFJGuQaDNYBmBj4i1hvkSBo"
+    model: "gpt-4o-mini"
+>>>>>>> RemoveDocumentService

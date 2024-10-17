@@ -1,7 +1,11 @@
 from langchain_core.documents import Document
 
 from cocoarag.dao.base import DAO
+<<<<<<< HEAD
 from cocoarag.models.documents import RetrieveChunkModel
+=======
+from cocoarag.models.documents import ChunkModel
+>>>>>>> RemoveDocumentService
 from cocoarag.models.queries import QueryModel
 
 
@@ -10,7 +14,11 @@ class SimilaritySearchDAO(DAO):
     """
     def __call__(self,
                  query: QueryModel,
+<<<<<<< HEAD
                  filters: dict) -> list[RetrieveChunkModel]:
+=======
+                 filters: dict) -> list[ChunkModel]:
+>>>>>>> RemoveDocumentService
         # collection_name is a general collection name
         # from config
         vector_store = self.get_vector_store(
@@ -34,7 +42,11 @@ class SimilaritySearchDAO(DAO):
 
         chunks = []
         for doc, score in scored_langchain_docs:
+<<<<<<< HEAD
             chunk = RetrieveChunkModel(
+=======
+            chunk = ChunkModel(
+>>>>>>> RemoveDocumentService
                 trace_id=query.trace_id,
                 file_name=doc.metadata.get("filename", "Error"),
                 content=doc.page_content.encode("utf-8"),
