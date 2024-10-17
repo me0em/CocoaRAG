@@ -38,7 +38,10 @@ class AddChunksToVectorStoreDAO(DAO):
         # TODO:
         # GetRealCollectionIDDAO()
         # SELECT collection_id FROM ...
-
+        accessor = GetRealCollectionIDDAO()
+        document_id = accessor(
+            collection_name=mock_id
+        )
         # TODO:
         # AddToUserTableDocumentWithThisUUIDDAO()
         ...
@@ -59,7 +62,32 @@ class AddChunksToVectorStoreDAO(DAO):
             collection_name=mock_id
         )
 
-        return
+        return document_id
+
+
+class GetRealCollectionIDDAO(DAO):
+    """Get document_id that was created 
+    by langchain using mock_id from AddChunksToVectorStoreDAO
+    """
+    def __call__(self,
+                 collection_name: str) -> str:
+        get_document_id_sql = """
+            SELECT uuid FROM langchain_pg_collection
+            WHERE name = '__name__';
+        """
+        try:
+            # Connect to the PostgreSQL database
+            print(get_document_id_sql.replace('__name__', collection_name))
+            with psycopg.connect(**self.connection_params) as conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        get_document_id_sql.replace('__name__', collection_name)
+                    )
+                    document_id = cur.fetchall()
+                    print(f"Document_id successfully extracted id: {document_id[0][0]}")
+                    return document_id[0][0]
+        except Exception as e:
+            print(f"Error extracting document_id: {e}")
 
 
 class UpdateCollectionInfoDAO(DAO):
@@ -171,14 +199,15 @@ class RemoveDocumentDAO(DAO):
 
 if __name__ == "__main__":
 
-    accessor = RemoveDocumentDAO()
-    accessor(document_id="5c921580-0a60-4240-ae24-0aac717bbbba")
+    # accessor = RemoveDocumentDAO()
+    # accessor(document_id="569938f1-6a15-4419-8319-9ae2b1e04229")
 
 
-    exit()
+    # exit()
 
 
     filename = "King Arthur"
+
     dummy_chunks = [
         ChunkModel(
             content="The king is dead.".encode('utf-8'),
@@ -198,6 +227,36 @@ if __name__ == "__main__":
                 "filename": filename,
                 "topic": "dummy",
                 "chunk_id": "id2",
+            }
+        ),
+        ChunkModel(
+            content="The king is fine".encode('utf-8'),
+            trace_id=uuid4().hex,
+            file_name=filename,  # useless
+            metadata={
+                "filename": filename,
+                "topic": "filter_check",
+                "chunk_id": "id3",
+            }
+        ),
+        ChunkModel(
+            content="The king is a little bit sick".encode('utf-8'),
+            trace_id=uuid4().hex,
+            file_name=filename,  # useless
+            metadata={
+                "filename": filename,
+                "topic": "filter_check",
+                "chunk_id": "id4",
+            }
+        ),
+        ChunkModel(
+            content="King will be okey newx week!".encode('utf-8'),
+            trace_id=uuid4().hex,
+            file_name=filename,  # useless
+            metadata={
+                "filename": filename,
+                "topic": "filter_check",
+                "chunk_id": "id5",
             }
         ),
     ]

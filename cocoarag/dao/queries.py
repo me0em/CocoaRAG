@@ -2,6 +2,7 @@ from langchain_core.documents import Document
 
 from cocoarag.dao.base import DAO
 from cocoarag.models.documents import ChunkModel
+from cocoarag.models.filters import FilterModel
 from cocoarag.models.queries import QueryModel
 
 
@@ -10,7 +11,7 @@ class SimilaritySearchDAO(DAO):
     """
     def __call__(self,
                  query: QueryModel,
-                 filters: dict) -> list[ChunkModel]:
+                 filter: FilterModel) -> list[ChunkModel]:
         # collection_name is a general collection name
         # from config
         vector_store = self.get_vector_store(
@@ -21,7 +22,7 @@ class SimilaritySearchDAO(DAO):
         scored_langchain_docs = vector_store.similarity_search_with_relevance_scores(
             query.content,
             k=self.config.quering.k,
-            filter=filters,
+            filter=filter.filter, # Filter model
         )
 
         # print(langchain_docs)

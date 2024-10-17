@@ -1,4 +1,4 @@
-# models.py
+# models/queries.py
 from pydantic import BaseModel, Field, field_validator
 from uuid import UUID, uuid4
 

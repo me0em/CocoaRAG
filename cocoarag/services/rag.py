@@ -9,6 +9,7 @@ from openai import OpenAI
 
 from cocoarag.dao.queries import SimilaritySearchDAO
 from cocoarag.models.documents import ChunkModel
+from cocoarag.models.filters import FilterModel
 from cocoarag.models.queries import QueryModel, AnswerModel
 from cocoarag.prompts.rag import rag_template_english_v0
 
@@ -18,12 +19,12 @@ class GetSimilarChunksService:
                  user_id: str,
                  group_id: str,
                  query: QueryModel,
-                 filters: Any = {}) -> list[ChunkModel]:
+                 filter: FilterModel) -> list[ChunkModel]:
         """ Get relevant chunks with respect to user's query
         The amount of chunks (k) is a config value
         """
         accessor = SimilaritySearchDAO()
-        chunks = accessor(query=query, filters=filters)
+        chunks = accessor(query=query, filter=filter)
 
         return chunks
 
@@ -100,7 +101,7 @@ class QueryRAGSystemService:
                  user_id: str,
                  group_id: str,
                  query: QueryModel,
-                 filters: Any = {}) -> AnswerModel:
+                 filters: FilterModel) -> AnswerModel:
         """ Get user's query, process it and return answer
         """
         service = GetSimilarChunksService()
@@ -140,10 +141,20 @@ class QueryRAGSystemService:
         return answer
 
 if __name__ == "__main__":
+
     str_query = "What happend to King?"
+    
     query = QueryModel(
         trace_id=uuid4().hex,
         content=str_query
+    )
+
+    query_filter = {
+
+    }
+
+    filter = FilterModel(
+        filter=query_filter
     )
 
     rag_service = QueryRAGSystemService()
