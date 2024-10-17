@@ -22,15 +22,7 @@ class DocumentModel(BaseModel):
                            description="UUID represents a single user interaction")
     file_name: str = Field(description="Filename")
     content: bytes = Field(description="Raw content")
-<<<<<<< HEAD
-<<<<<<< Updated upstream
     metadata: dict  # TODO: validation & обязательные поля типа названия
-=======
-    metadata: dict = Field(description="Dict with keys in ('chunk_id', ...)")
->>>>>>> Stashed changes
-=======
-    metadata: dict
->>>>>>> RemoveDocumentService
 
     @field_validator("content")
     @staticmethod
@@ -47,19 +39,13 @@ class ChunkModel(DocumentModel):
     """ A model representing a chunk of a document.
     Inherits all attributes and methods from DocumentModel.
     """
-<<<<<<< HEAD
-<<<<<<< Updated upstream
     pass
-=======
 
 
 class RetrieveChunkModel(DocumentModel):
     """ A model representing a chunk of a document.
     Inherits all attributes and methods from DocumentModel.
     """
-    score: Optional[float]
->>>>>>> Stashed changes
-=======
     score: Optional[float] = None
 
 
@@ -88,4 +74,3 @@ if __name__ == "__main__":
         },
         score=0.54
     )
->>>>>>> RemoveDocumentService
