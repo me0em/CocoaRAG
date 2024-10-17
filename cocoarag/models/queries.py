@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-# queries.py
-=======
 # models.py
->>>>>>> RemoveDocumentService
 from pydantic import BaseModel, Field, field_validator
 from uuid import UUID, uuid4
 
