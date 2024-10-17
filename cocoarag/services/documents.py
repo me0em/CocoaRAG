@@ -40,8 +40,11 @@ class SplitTextRecursivelyService:
                 trace_id=document.trace_id,
                 file_name=document.file_name,
                 content=text.page_content.encode('utf-8'),
+                # document.metadata['id'] is not real document_id
                 metadata={
-                    "chunk_id": f"{document.metadata['id']}::{idx}",
+                    # "chunk_id": f"{document.metadata['id']}::{idx}",
+                    "chunk_id": f"{uuid4().hex}",
+                    "index": f"{{idx}}",
                     "filename": document.metadata['filename'],
                     "topic": document.metadata['topic'],
                 }
@@ -65,7 +68,7 @@ class AddDocumentService:
     def __call__(self,
                  user_id: str,
                  user_group: str,
-                 document: DocumentModel) -> None:
+                 document: DocumentModel) -> str:
         # split document content:
         service = SplitTextRecursivelyService()
         chunks: list[ChunkModel] = service(document)
@@ -113,6 +116,7 @@ if __name__ == "__main__":
     with open(config_path, "r") as file:
         document_text = file.read()
     document_id = uuid4().hex
+    
     user_id = uuid4().hex
     group_id = uuid4().hex
     print(f'User_id: {user_id}, Group_id:{group_id}')

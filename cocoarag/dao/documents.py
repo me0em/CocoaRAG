@@ -42,9 +42,6 @@ class AddChunksToVectorStoreDAO(DAO):
         document_id = accessor(
             collection_name=mock_id
         )
-        # TODO:
-        # AddToUserTableDocumentWithThisUUIDDAO()
-        ...
 
         # ~~~ Attention! ~~~
         # Because of autism of Langchain developers,
@@ -196,6 +193,10 @@ class RemoveDocumentDAO(DAO):
         except Exception as e:
             print(f"Error inserting document: {e}")
 
+
+## To-do
+# DAO (collection_id) -> [chunk_id]
+# Service над этим DAO (будет вызываться в filterservice)
 
 if __name__ == "__main__":
 
