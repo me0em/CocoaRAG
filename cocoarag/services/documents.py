@@ -93,7 +93,10 @@ class AddDocumentService:
 
 
 class RemoveDocumentService:
-    """ Remove document from the RAG system.
+    """ Remove document from the RAG system. Delete 
+    document (collection_id) and all related 
+    embeddings (chunk_id) from both tabels:
+    'langchain_pg_collection' and 'langchain_pg_embedding'
     """
     def __call__(self,
                  user_id: str,
@@ -108,7 +111,6 @@ class RemoveDocumentService:
 
 if __name__ == "__main__":
     import os 
-    import time
 
     # filepath = "../../dummy_files/bill-of-rights-analytics.txt"
     filepath = "../../data/alice.txt"
@@ -151,6 +153,4 @@ if __name__ == "__main__":
         user_group=group_id, 
         document=document
     )
-    print('Document is in da house successfully')
-
-    print('You have 10 seconds to check that ...')
+    print('Document uploaded successfully')
