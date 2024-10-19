@@ -2,6 +2,9 @@
 *.pyc
 *.pyo
 __pycache__/
-
-# Optionally, you can ignore all .log files or other temporary files
-*.log
+configs/credits.yml
+credits.ym
+*.pyc
+cocoaragenv
+cocoaragenv/*
+DS_Store
