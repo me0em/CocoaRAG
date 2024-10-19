@@ -22,7 +22,7 @@ class SimilaritySearchDAO(DAO):
         scored_langchain_docs = vector_store.similarity_search_with_relevance_scores(
             query.content,
             k=self.config.quering.k,
-            filter=filter.filter, # Filter model
+            filter=filter.content, # Filter model
         )
 
         # print(langchain_docs)

@@ -74,7 +74,6 @@ class GetRealCollectionIDDAO(DAO):
         """
         try:
             # Connect to the PostgreSQL database
-            print(get_document_id_sql.replace('__name__', collection_name))
             with psycopg.connect(**self.connection_params) as conn:
                 with conn.cursor() as cur:
                     cur.execute(
@@ -88,7 +87,7 @@ class GetRealCollectionIDDAO(DAO):
 
 
 class UpdateCollectionInfoDAO(DAO):
-    """ Update user_id and user_group
+    """ Update user_id, user_group and name
     in collection table to add documents
     and may be transfer ownership later
     """
@@ -195,6 +194,7 @@ class RemoveDocumentDAO(DAO):
 
 
 ## To-do
+# DAO (user_id) -> [collection_id]
 # DAO (collection_id) -> [chunk_id]
 # Service над этим DAO (будет вызываться в filterservice)
 
@@ -206,8 +206,7 @@ if __name__ == "__main__":
 
     # exit()
 
-
-    filename = "King Arthur"
+    filename = "King Arthur (FROM DAO)"
 
     dummy_chunks = [
         ChunkModel(
@@ -251,7 +250,7 @@ if __name__ == "__main__":
             }
         ),
         ChunkModel(
-            content="King will be okey newx week!".encode('utf-8'),
+            content="King will be okey next week!".encode('utf-8'),
             trace_id=uuid4().hex,
             file_name=filename,  # useless
             metadata={

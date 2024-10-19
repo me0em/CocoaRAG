@@ -40,11 +40,10 @@ class SplitTextRecursivelyService:
                 trace_id=document.trace_id,
                 file_name=document.file_name,
                 content=text.page_content.encode('utf-8'),
-                # document.metadata['id'] is not real document_id
                 metadata={
-                    # "chunk_id": f"{document.metadata['id']}::{idx}",
-                    "chunk_id": f"{uuid4().hex}",
-                    "index": f"{{idx}}",
+                    # document.metadata['id'] is not real document_id
+                    "chunk_id": uuid4().hex,
+                    "index": idx,
                     "filename": document.metadata['filename'],
                     "topic": document.metadata['topic'],
                 }

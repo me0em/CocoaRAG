@@ -101,7 +101,7 @@ class QueryRAGSystemService:
                  user_id: str,
                  group_id: str,
                  query: QueryModel,
-                 filters: FilterModel) -> AnswerModel:
+                 filter: FilterModel) -> AnswerModel:
         """ Get user's query, process it and return answer
         """
         service = GetSimilarChunksService()
@@ -109,8 +109,10 @@ class QueryRAGSystemService:
             user_id=user_id,
             group_id=group_id,
             query=query,
-            filters=filters
+            filter=filter
         )
+
+        print(f'Selected chunks: {chunks}')
 
         if not chunks:
             return AnswerModel(
@@ -149,12 +151,21 @@ if __name__ == "__main__":
         content=str_query
     )
 
-    query_filter = {
+    # query_filter = {
+    #     "$and": [
+    #         {"chunk_id": {"$in": ["id4", "id5", "id228"]}},
+    #         {"topic": {"$in": ["filter_check"]}},
+    #     ]
+    # }
 
+    query_filter={
+        "chunk_id": {"$in": ["id4", "id5", "id228"]}, 
+        "topic": {"$in": ["filter_check"]},
+        # "mashroom" : {"$in": ["filter_check"]}
     }
 
     filter = FilterModel(
-        filter=query_filter
+        content=query_filter
     )
 
     rag_service = QueryRAGSystemService()
@@ -163,7 +174,7 @@ if __name__ == "__main__":
         user_id=uuid4().hex,
         group_id=uuid4().hex,
         query=query,
-        filters={}
+        filter=filter
     )
 
     print(answer)
