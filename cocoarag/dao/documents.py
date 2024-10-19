@@ -11,7 +11,7 @@ class AddChunksToVectorStoreDAO(DAO):
     def __call__(self,
                  user_id: str,
                  user_group: str,
-                 chunks: list[ChunkModel]) -> None:
+                 chunks: list[ChunkModel]) -> str:
         """Add chunks to the vector store.
         Use with `AddDocumentDAO` to have a
         relation: collection>document>chunks
@@ -35,31 +35,35 @@ class AddChunksToVectorStoreDAO(DAO):
             ids=[doc.metadata["chunk_id"] for doc in langchain_docs]
         )
 
-        # TODO:
-        # GetRealCollectionIDDAO()
-        # SELECT collection_id FROM ...
+        # get real document uuid
         accessor = GetRealCollectionIDDAO()
         document_id = accessor(
             collection_name=mock_id
         )
 
-        # ~~~ Attention! ~~~
-        # Because of autism of Langchain developers,
-        # we manually created tables for embeddings and
-        # collections, emulated langchain behavior.
-        # tables: `langchain_pg_collection` & `langchain_pg_embedding`
-        #
-        # But we expanded this tables, so we need to update
-        # some of their values with raw SQL.
-
-        accessor = UpdateCollectionInfoDAO()
-        accessor(
-            user_id=user_id,
-            user_group=user_group,
-            collection_name=mock_id
-        )
-
         return document_id
+
+
+class GetAllDocumentsByUserIDDAO(DAO):
+    def __call__(self,
+                 user_id: str) -> list[DocumentModel]:
+        """ Get all documents by user id, in this
+        function we return documents raw content too
+        """
+        get_documents_sql = f"""
+            SELECT uuid, name, cmetadata FROM langchain_pg_collection
+            WHERE user_id = '{user_id}';
+        """
+        try:
+            # Connect to the PostgreSQL database
+            with psycopg.connect(**self.connection_params) as conn:
+                with conn.cursor() as cur:
+                    cur.execute(get_documents_sql)
+                    documents = cur.fetchall()
+                    print(f"{len(documents)} documents successfully extracted for {user_id}")
+                    return documents
+        except Exception as e:
+            print(f"Error extracting document_id: {e}")
 
 
 class GetRealCollectionIDDAO(DAO):
@@ -87,55 +91,44 @@ class GetRealCollectionIDDAO(DAO):
 
 
 class UpdateCollectionInfoDAO(DAO):
-    """ Update user_id, user_group and name
+    """ Update user_id, user_group, name and content
     in collection table to add documents
     and may be transfer ownership later
     """
     def __call__(self,
                  user_id: str,
                  user_group: str,
-                 collection_name: str) -> None:
-        # collection_name is mock_id
-
-        # SQL command to insert data into the table
+                 content: bytes,
+                 document_id: str) -> None:
+        # ~~~ Attention! ~~~
+        # Due to autism of Langchain developers, we manually
+        # created and expanded the langchain_pg_collection and
+        # langchain_pg_embedding tables to mimic its behavior.
+        # We need to update some values in these tables using
+        # raw SQL. Also, a single collection_name is required
+        # for querying the vector store, so we update it after
+        # adding the real document ID to the users table.
         update_data_sql = """
             UPDATE langchain_pg_collection
-            SET user_id = %s, group_id = %s
-            WHERE name = %s;
-        """
-        try:
-            # Connect to the PostgreSQL database
-            with psycopg.connect(**self.connection_params) as conn:
-                with conn.cursor() as cur:
-                    cur.execute(update_data_sql, (user_id, user_group, collection_name))
-                    conn.commit()
-                    print(f"Document updated successfully with id: {collection_name}")
-        except Exception as e:
-            print(f"Error inserting document: {e}")
-
-        # ~~Attention!~~
-        # We need a single collection_name for all documents
-        # to query vector store correctly, so we
-        # update collection_name after we use it to add
-        # real document id to users table
-        update_again_data_sql = """
-            UPDATE langchain_pg_collection
-            SET name = %s
-            WHERE name = %s;
+            SET user_id = %s, group_id = %s, content = %b, name = %s
+            WHERE uuid = %s;
         """
         try:
             # Connect to the PostgreSQL database
             with psycopg.connect(**self.connection_params) as conn:
                 with conn.cursor() as cur:
                     cur.execute(
-                        update_again_data_sql,
+                        update_data_sql,
                         (
+                            user_id,
+                            user_group,
+                            content,
                             self.config.quering.basic_collection_name,
-                            collection_name
+                            document_id
                         )
                     )
                     conn.commit()
-                    print("Document collection_name reupdated successfully")
+                    print(f"Document updated successfully with id: {document_id}")
         except Exception as e:
             print(f"Error inserting document: {e}")
 
@@ -202,9 +195,16 @@ if __name__ == "__main__":
 
     # accessor = RemoveDocumentDAO()
     # accessor(document_id="569938f1-6a15-4419-8319-9ae2b1e04229")
-
-
     # exit()
+
+
+
+    user_id = "d18ad67e-aa78-4bab-8e3f-1e50404b3c76"
+    accessor = GetAllDocumentsByUserIDDAO()
+    docs = accessor(user_id)
+    print("===>>>", docs)
+    exit()
+
 
     filename = "King Arthur (FROM DAO)"
 

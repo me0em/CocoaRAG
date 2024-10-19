@@ -22,6 +22,7 @@ CREATE TABLE public.langchain_pg_collection (
     "user_id" uuid,
     "group_id" uuid,
     "name" varchar NOT NULL,
+    "content" bytea,
     cmetadata json NULL,
     CONSTRAINT langchain_pg_collection_name_key UNIQUE (name),
 CONSTRAINT langchain_pg_collection_pkey PRIMARY KEY (uuid)

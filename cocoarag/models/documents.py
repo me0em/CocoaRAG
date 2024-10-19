@@ -23,6 +23,7 @@ class DocumentModel(BaseModel):
     file_name: str = Field(description="Filename")
     content: bytes = Field(description="Raw content")
     metadata: dict  # TODO: validation & обязательные поля типа названия
+    document_id: Optional[str] = None  # fill this up when give docs to user
 
     @field_validator("content")
     @staticmethod

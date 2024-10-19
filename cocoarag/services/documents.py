@@ -5,6 +5,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from cocoarag.dao.documents import (
     AddChunksToVectorStoreDAO,
+    UpdateCollectionInfoDAO,
     RemoveDocumentDAO
 )
 from cocoarag.models.documents import (
@@ -67,14 +68,14 @@ class AddDocumentService:
     def __call__(self,
                  user_id: str,
                  user_group: str,
-                 document: DocumentModel) -> str:
+                 document: DocumentModel) -> None:
         # split document content:
         service = SplitTextRecursivelyService()
         chunks: list[ChunkModel] = service(document)
 
         # insert chunks to the table
         accessor = AddChunksToVectorStoreDAO()
-        document_id:str = accessor(
+        document_id: str = accessor(
             user_id=user_id,
             user_group=user_group,
             chunks=chunks
@@ -82,7 +83,13 @@ class AddDocumentService:
 
         print(f'AddDocumentService document_id: {document_id}')
 
-        return document_id
+        accessor = UpdateCollectionInfoDAO()
+        accessor(
+            user_id=user_id,
+            user_group=user_group,
+            content=document.content,
+            document_id=document_id
+        )
 
 
 class RemoveDocumentService:
@@ -111,11 +118,11 @@ if __name__ == "__main__":
 
     # file_name = "Bill of Rights / Analytics"
     file_name = "Alice in Wonderland"
-    
+
     with open(config_path, "r") as file:
         document_text = file.read()
     document_id = uuid4().hex
-    
+
     user_id = uuid4().hex
     group_id = uuid4().hex
     print(f'User_id: {user_id}, Group_id:{group_id}')
@@ -123,7 +130,7 @@ if __name__ == "__main__":
 
     # document_id goes into metadata
     # metadata fields: ["filename", "topic", "chunk_id"]
-    
+
     document = DocumentModel(
         trace_id=uuid4().hex,
         file_name=file_name,
@@ -139,12 +146,11 @@ if __name__ == "__main__":
     print("Document model has been created")
 
     service = AddDocumentService()
-    new_document_id:str = service(
+    service(
         user_id=user_id,
         user_group=group_id, 
         document=document
     )
-    print(f'Document {new_document_id} is in da house successfully')
+    print('Document is in da house successfully')
 
     print('You have 10 seconds to check that ...')
-    time.sleep(13)

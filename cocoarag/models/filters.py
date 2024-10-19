@@ -13,7 +13,7 @@ class FilterModel(BaseModel):
     """ Represents a complex filter for similarity search
     """
     # This Model expect filter to be using operators ($AND, $IN) only!!!!!
-    content: dict[str, dict[str, list[str]]] = Field(description="Filter logic for the query")
+    content: dict[str, dict[str, list[str]]] | dict = Field(description="Filter logic for the query")
 
     # @field_validator("content")
     # def validate_filter(val):

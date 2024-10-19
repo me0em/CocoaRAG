@@ -144,7 +144,7 @@ class QueryRAGSystemService:
 
 if __name__ == "__main__":
 
-    str_query = "What happend to King?"
+    str_query = "What Queen said to Alice?"
     
     query = QueryModel(
         trace_id=uuid4().hex,
@@ -163,6 +163,8 @@ if __name__ == "__main__":
         "topic": {"$in": ["filter_check"]},
         # "mashroom" : {"$in": ["filter_check"]}
     }
+
+    query_filter = {}
 
     filter = FilterModel(
         content=query_filter
