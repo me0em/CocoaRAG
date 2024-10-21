@@ -7,7 +7,7 @@ import yaml
 from box import Box
 from openai import OpenAI
 
-from cocoarag.dao.queries import SimilaritySearchDAO
+from cocoarag.dao.queries import SimilaritySearchDAO, GetHistoryDAO
 from cocoarag.models.documents import ChunkModel
 from cocoarag.models.filters import FilterModel
 from cocoarag.models.queries import QueryModel, AnswerModel
@@ -71,7 +71,9 @@ class GenerateAnswerService:
             print(f"Error loading configuration file: {e}")
             raise
 
-    def __call__(self, context_prompt: str, user_prompt: str) -> str:
+    def __call__(self,
+                 context_prompt: str,
+                 user_prompt: str) -> str:
         """ Generates an answer based on the given prompt.
         """
         try:
@@ -100,19 +102,20 @@ class QueryRAGSystemService:
     def __call__(self,
                  user_id: str,
                  group_id: str,
+                 conversation_id: str,
                  query: QueryModel,
                  filter: FilterModel) -> AnswerModel:
         """ Get user's query, process it and return answer
         """
-        service = GetSimilarChunksService()
+        # history: list = GetHistoryService(conversation_id)
+
+        service = GetSimilarChunksService()        
         chunks: list[ChunkModel] = service(
             user_id=user_id,
             group_id=group_id,
             query=query,
             filter=filter
         )
-
-        print(f'Selected chunks: {chunks}')
 
         if not chunks:
             return AnswerModel(
@@ -141,6 +144,20 @@ class QueryRAGSystemService:
         )
 
         return answer
+
+
+class GetHistoryService:
+    def __call__(self,
+                 conversation_id: str) -> list[dict]:
+        """ Get conversation history, return empty list
+        if does not exist
+        """
+        accessor = GetHistoryDAO()
+        history = accessor(conversation_id)
+
+        return history
+
+
 
 if __name__ == "__main__":
 
