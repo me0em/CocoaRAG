@@ -62,6 +62,32 @@ ADD CONSTRAINT langchain_pg_collection_user_id_fkey
 FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE CASCADE;
 """
 
+create_conversations_table_sql = """
+    CREATE TABLE IF NOT EXISTS public.conversations (
+    conversation_id UUID PRIMARY KEY UNIQUE NOT NULL,
+    user_id UUID,
+    content JSONB,
+    CONSTRAINT fk_user
+        FOREIGN KEY (user_id)
+        REFERENCES public.users(user_id)
+        ON DELETE CASCADE
+);
+"""
+
+
+
+
+def create_conversations():
+    try:
+        # Connect to the PostgreSQL database
+        with psycopg.connect(**connection_params) as conn:
+            with conn.cursor() as cur:
+                # Execute the SQL command to create the table
+                cur.execute(create_conversations_table_sql)
+                conn.commit()
+    except Exception as e:
+        print(f"Error creating table: {e}")
+
 
 def create_extension():
     try:
@@ -120,3 +146,5 @@ if __name__ == "__main__":
     print("Table 'langchain_pg_collection' created successfully.")
     create_embedding_table()
     print("Table 'langchain_pg_embedding' created successfully.")
+    create_conversations()
+    print("Table 'conversations' created successfully.")
