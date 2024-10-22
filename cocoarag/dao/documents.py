@@ -133,33 +133,33 @@ class UpdateCollectionInfoDAO(DAO):
             print(f"Error inserting document: {e}")
 
 
-class AddFileDAO(DAO):
-    """ Add raw document with user and collection_id
-        relations. Use with `AddChunksToVectorStoreDAO`
-        to have a relation: user>document>chunks
-    """
-    def __call__(self,
-                 user_id: str,
-                 user_group: str,
-                 document: DocumentModel) -> None:
-        # SQL command to insert data into the table
-        insert_data_sql = """
-        INSERT INTO files
-        (user_id, collection_id, raw)
-        VALUES (%s, %s, %s);
-        """
-        try:
-            # Connect to the PostgreSQL database
-            with psycopg.connect(**self.connection_params) as conn:
-                with conn.cursor() as cur:
-                    cur.execute(insert_data_sql,
-                                (user_id,
-                                 document.metadata["id"],
-                                 document.content))
-                    conn.commit()
-                    print(f"Document inserted successfully with id: {document.metadata['id']}")
-        except Exception as e:
-            print(f"Error inserting document: {e}")
+# class AddFileDAO(DAO):
+#     """ Add raw document with user and collection_id
+#         relations. Use with `AddChunksToVectorStoreDAO`
+#         to have a relation: user>document>chunks
+#     """
+#     def __call__(self,
+#                  user_id: str,
+#                  user_group: str,
+#                  document: DocumentModel) -> None:
+#         # SQL command to insert data into the table
+#         insert_data_sql = """
+#         INSERT INTO files
+#         (user_id, collection_id, raw)
+#         VALUES (%s, %s, %s);
+#         """
+#         try:
+#             # Connect to the PostgreSQL database
+#             with psycopg.connect(**self.connection_params) as conn:
+#                 with conn.cursor() as cur:
+#                     cur.execute(insert_data_sql,
+#                                 (user_id,
+#                                  document.metadata["id"],
+#                                  document.content))
+#                     conn.commit()
+#                     print(f"Document inserted successfully with id: {document.metadata['id']}")
+#         except Exception as e:
+#             print(f"Error inserting document: {e}")
 
 
 class RemoveDocumentDAO(DAO):
@@ -185,11 +185,6 @@ class RemoveDocumentDAO(DAO):
         except Exception as e:
             print(f"Error inserting document: {e}")
 
-
-## To-do
-# DAO (user_id) -> [collection_id]
-# DAO (collection_id) -> [chunk_id]
-# Service над этим DAO (будет вызываться в filterservice)
 
 if __name__ == "__main__":
 

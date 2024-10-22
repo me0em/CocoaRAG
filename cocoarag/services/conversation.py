@@ -42,19 +42,6 @@ class ConversationService:
             self.memory.save_context({"input": "hi"}, {"output": "whats up"})
             self.memory.save_context({"input": "not much you"}, {"output": "not much"})
             self.memory.load_memory_variables({})
-            
-
-
         except Exception as e:
             print(f"Error generating answer: {e}")
             raise
-
-
-
-conversation_sum_mem = ConversationChain(
-    llm=llm,
-    memory=memory
-)
-
-# посмотрим как поменялся шаблон для промпта
-print(conversation_sum_mem.memory.prompt.template)

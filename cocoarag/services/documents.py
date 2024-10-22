@@ -129,7 +129,6 @@ if __name__ == "__main__":
     print(f'User downloaded the document: {file_name} service created id for it {document_id}')
 
     # document_id goes into metadata
-    # metadata fields: ["filename", "topic", "chunk_id"]
 
     document = DocumentModel(
         trace_id=uuid4().hex,
