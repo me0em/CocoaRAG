@@ -88,6 +88,7 @@ class AddDocumentService:
             user_id=user_id,
             user_group=user_group,
             content=document.content,
+            new_document_name=document.file_name, # new 
             document_id=document_id
         )
 
@@ -108,7 +109,6 @@ class RemoveDocumentService:
 
 if __name__ == "__main__":
     import os 
-    import time
 
     # filepath = "../../dummy_files/bill-of-rights-analytics.txt"
     filepath = "../../data/alice.txt"

@@ -35,7 +35,7 @@ class GetConversationHistoryDAO(DAO):
             print(f"Error extracting document_id: {e}")
 
 
-class LoadConversationHistoryDAO(DAO):
+class SaveConversationHistoryDAO(DAO):
     def __call__(self,
                  user_id: str,
                  conversation_id: str,
@@ -72,59 +72,86 @@ class LoadConversationHistoryDAO(DAO):
             raise
 
 
-class SaveConversationHistoryDAO(DAO):
+class RewriteConversationHistoryDAO(DAO):
     def __call__(self,
-                 user_id: str,
-                 conversation_id: str,
-                 content: dict) -> None:
-        """ Save new conversation into table 'conversations'. (conversation doesn't exist)
+                 conversation_history: list,
+                 new_question:str,
+                 new_answer:str,
+                 num:int=10) -> list[dict]:
+        """Keep last `num` questions and answers from conversation history.
+        
+        Args:
+            conversation_history (list): The current conversation history, can be an empty list.
+            new_question (str): The new user query to add.
+            new_answer (str): The new model answer to add.
+            num (int): Maximum number of question-answer pairs to keep. Default is 10.
+        
+        Returns:
+            list[dict]: Updated conversation history with the latest `num` question-answer pairs.
         """
-        insert_conversation_sql = """
-        INSERT INTO public.conversations (conversation_id, user_id, content)
-        VALUES (%s, %s, %s)
-        """
+        conversation_history.append({"role": "user", "content": new_question})
+        conversation_history.append({"role": "assistant", "content": new_answer})
+        
+        max_length = num * 2
+        if len(conversation_history) > max_length:
+            conversation_history = conversation_history[-max_length:]
+        
+        return conversation_history
+    
 
-        try:
-            # Connect to the PostgreSQL database
-            with psycopg.connect(**self.connection_params) as conn:
-                with conn.cursor() as cur:
-                    cur.execute(
-                        insert_conversation_sql,
-                        (conversation_id, user_id, Jsonb(content))
-                    )
-                    conn.commit()
-                    print(f"Conversation {conversation_id} saved successfully.")
-        except Exception as e:
-            print(f"Error saving conversation {conversation_id}: {e}")
-            raise
+# class SaveConversationHistoryDAO(DAO):
+#     def __call__(self,
+#                  user_id: str,
+#                  conversation_id: str,
+#                  content: dict) -> None:
+#         """ Save new conversation into table 'conversations'. (conversation doesn't exist)
+#         """
+#         insert_conversation_sql = """
+#         INSERT INTO public.conversations (conversation_id, user_id, content)
+#         VALUES (%s, %s, %s)
+#         """
+
+#         try:
+#             # Connect to the PostgreSQL database
+#             with psycopg.connect(**self.connection_params) as conn:
+#                 with conn.cursor() as cur:
+#                     cur.execute(
+#                         insert_conversation_sql,
+#                         (conversation_id, user_id, Jsonb(content))
+#                     )
+#                     conn.commit()
+#                     print(f"Conversation {conversation_id} saved successfully.")
+#         except Exception as e:
+#             print(f"Error saving conversation {conversation_id}: {e}")
+#             raise
 
 
-class UpdateConversationHistoryDAO(DAO):
-    def __call__(self,
-                 user_id: str,
-                 conversation_id: str,
-                 content: dict) -> None:
-        """Update existing conversation (conversation already exists in the database)"""
-        update_conversation_sql = """
-        UPDATE public.conversations
-        SET content = %s
-        WHERE conversation_id = %s AND 
-              user_id = %s;
-        """
+# class UpdateConversationHistoryDAO(DAO):
+#     def __call__(self,
+#                  user_id: str,
+#                  conversation_id: str,
+#                  content: dict) -> None:
+#         """Update existing conversation (conversation already exists in the database)"""
+#         update_conversation_sql = """
+#         UPDATE public.conversations
+#         SET content = %s
+#         WHERE conversation_id = %s AND 
+#               user_id = %s;
+#         """
 
-        try:
-            # Connect to the PostgreSQL database
-            with psycopg.connect(**self.connection_params) as conn:
-                with conn.cursor() as cur:
-                    cur.execute(
-                        update_conversation_sql,
-                        (Jsonb(content), conversation_id, user_id)
-                    )
-                    conn.commit()
-                    print(f"Conversation {conversation_id} updated successfully.")
-        except Exception as e:
-            print(f"Error updating conversation {conversation_id}: {e}")
-            raise
+#         try:
+#             # Connect to the PostgreSQL database
+#             with psycopg.connect(**self.connection_params) as conn:
+#                 with conn.cursor() as cur:
+#                     cur.execute(
+#                         update_conversation_sql,
+#                         (Jsonb(content), conversation_id, user_id)
+#                     )
+#                     conn.commit()
+#                     print(f"Conversation {conversation_id} updated successfully.")
+#         except Exception as e:
+#             print(f"Error updating conversation {conversation_id}: {e}")
+#             raise
 
 
 class AddUserDAO(DAO):
@@ -161,33 +188,6 @@ class AddUserDAO(DAO):
         except Exception as e:
             print(f"Error saving User {username}: {e}")
             raise
-
-
-class TrimConversationHistoryDAO(DAO):
-    def __call__(self,
-                 conversation_history: list,
-                 new_question:str,
-                 new_answer:str,
-                 num:int=10) -> list[dict]:
-        """Keep last `num` questions and answers from conversation history.
-        
-        Args:
-            conversation_history (list): The current conversation history, can be an empty list.
-            new_question (str): The new user query to add.
-            new_answer (str): The new model answer to add.
-            num (int): Maximum number of question-answer pairs to keep. Default is 10.
-        
-        Returns:
-            list[dict]: Updated conversation history with the latest `num` question-answer pairs.
-        """
-        conversation_history.append({"role": "user", "content": new_question})
-        conversation_history.append({"role": "assistant", "content": new_answer})
-        
-        max_length = num * 2
-        if len(conversation_history) > max_length:
-            conversation_history = conversation_history[-max_length:]
-        
-        return conversation_history
     
 
 # --------------------------- {} ---------------------------

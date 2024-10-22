@@ -10,8 +10,8 @@ from openai import OpenAI
 from cocoarag.dao.queries import (
     SimilaritySearchDAO, 
     GetConversationHistoryDAO,
-    TrimConversationHistoryDAO,
-    LoadConversationHistoryDAO
+    RewriteConversationHistoryDAO,
+    SaveConversationHistoryDAO
 )
 from cocoarag.models.documents import ChunkModel
 from cocoarag.models.filters import FilterModel
@@ -135,9 +135,10 @@ class SaveConversationService:
                  qa_history,
                  new_question,
                  new_answer) -> None:
-        """ To-Do
+        """ To-Do 
+        num as a parameter
         """
-        accessor = TrimConversationHistoryDAO()
+        accessor = RewriteConversationHistoryDAO()
         history = accessor(
             qa_history,
             new_question,
@@ -145,7 +146,7 @@ class SaveConversationService:
             num=2
         )
 
-        accessor = LoadConversationHistoryDAO()
+        accessor = SaveConversationHistoryDAO()
         accessor(
             user_id,
             conversation_id,
@@ -261,10 +262,10 @@ if __name__ == "__main__":
 
         document = DocumentModel(
             trace_id=uuid4().hex,
-            file_name=file_name + document_id,
+            file_name=file_name + str(document_id), # must be changed to just file_name or + trace_id
             content=document_text,
             metadata={
-                "filename": file_name + document_id,
+                "filename": file_name,
                 "id": document_id,
                 "user_id": user_id,
                 "topic": "test_rag"
@@ -289,8 +290,29 @@ if __name__ == "__main__":
              around 2.1 million."}
         ]
 
-        save_conversation_service = LoadConversationHistoryDAO()
+        save_conversation_service = SaveConversationHistoryDAO()
         save_conversation_service(user_id, conversation_id, history)
+
+    def change_conversation_history(user_id, conversation_id, query_content, generation_result):
+        qa_service = GetConversaionHistoryService()
+        qa_history: list[Optional[dict]] = qa_service(conversation_id)
+
+        print('***Found conversation history in database***')
+        print(f'Type: {type(qa_history)}', qa_history, sep='\n\n')
+
+        save_conversation_service = SaveConversationService()
+        save_conversation_service(
+            user_id, conversation_id,
+            qa_history,
+            query_content,
+            generation_result,
+        )
+
+        qa_service = GetConversaionHistoryService()
+        qa_history: list[Optional[dict]] = qa_service(conversation_id)
+
+        print('***New conversation history in database***')
+        print(f'Type: {type(qa_history)}', qa_history, sep='\n\n')
 
     def check_conversations_work():
         print("======Creating new User========")
@@ -306,23 +328,77 @@ if __name__ == "__main__":
         save_conversation_info(user_id, conversation_id)
         print(f'Conversation {conversation_id} for User {user_id} uploaded')
 
-        print("======Answer with already existing conversation ========")
-
-        query = QueryModel(
-            trace_id = uuid4().hex,
-            content="What is the name of Petya friend? And population in Paris?"
-        )
-        filter = FilterModel(
-            content = {}
-        )
-        rag_query = QueryRAGSystemService()
-        answer = rag_query(
-            user_id, user_group, conversation_id, query, filter
+        print("======Cnahging conversation into bd========")
+        change_conversation_history(
+            user_id, 
+            conversation_id, 
+            '<===== New user query =====>',
+            '<===== New model answer ======>'
         )
 
-        print(answer)
+    def check_conversation_rag_with_conversation(conv=False):
+        print("======Creating new User========")
+        user_id, user_group = create_new_user()
+        print(f'User : {user_id} created')
 
-    check_conversations_work()
+        print("======Creating document and chunks for retriever========")
+        upload_document(user_id, user_group)
+        print(f'Documents for User {user_id} saved')
+
+        if conv:
+            print("======Saving conversation into bd========")
+            conversation_id = uuid4().hex
+            save_conversation_info(user_id, conversation_id)
+            print(f'Conversation {conversation_id} for User {user_id} uploaded')
+
+            print("======Answer with already existing conversation ========")
+
+            query = QueryModel(
+                trace_id = uuid4().hex,
+                content="What is the name of Petya friend? And population in Paris?"
+            )
+            filter = FilterModel(
+                content = {}
+            )
+            rag_query = QueryRAGSystemService()
+            answer = rag_query(
+                user_id, user_group, conversation_id, query, filter
+            )
+
+            print(answer)
+        
+        else:
+            print("======Answer on new conversation ========")
+            conversation_id = uuid4().hex # new conversation
+
+            query = QueryModel(
+                trace_id = uuid4().hex,
+                content="What is the name of Petya friend? And population in Paris?"
+            )
+            filter = FilterModel(
+                content = {}
+            )
+            rag_query = QueryRAGSystemService()
+            answer = rag_query(
+                user_id, user_group, conversation_id, query, filter
+            )
+
+            print(answer)
+
+    '''
+    ============================================================
+    ============================================================
+    ============================================================
+    ============================================================
+    ============================================================
+    ============================================================
+    ============================================================
+    ============================================================
+    '''
+    # check_conversations_work()
+    # check_conversation_rag_with_conversation()
+    check_conversation_rag_with_conversation(True)
+
 # ------------------------------------------------------
 
     def check_retrieve():
