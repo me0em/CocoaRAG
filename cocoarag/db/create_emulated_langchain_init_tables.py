@@ -10,41 +10,16 @@ connection_params = {
 }
 
 
-# turn on vectors stuff on psql
-create_extension_sql = """
-CREATE EXTENSION IF NOT EXISTS vector;
-"""
-
-
-create_collections_table_sql = """
-CREATE TABLE public.langchain_pg_collection (
-    "uuid" uuid NOT NULL,
+create_documents_table_sql = """
+CREATE TABLE public.documents (
+    "document_id" UUID PRIMARY KEY UNIQUE NOT NULL,
     "user_id" uuid,
-    "group_id" uuid,
+    "user_group" uuid,
     "name" varchar NOT NULL,
     "content" bytea,
-    cmetadata json NULL,
-    CONSTRAINT langchain_pg_collection_name_key UNIQUE (name),
-CONSTRAINT langchain_pg_collection_pkey PRIMARY KEY (uuid)
+    cmetadata json,
 );
 """
-
-
-# SQL command to create the table
-create_embeddings_table_sql = """
-    CREATE TABLE public.langchain_pg_embedding (
-        id varchar NOT NULL,
-        collection_id uuid NULL,
-        embedding public.vector NULL,
-        "document" varchar NULL,
-        cmetadata jsonb NULL,
-        CONSTRAINT langchain_pg_embedding_pkey PRIMARY KEY (id),
-        CONSTRAINT langchain_pg_embedding_collection_id_fkey FOREIGN KEY (collection_id) REFERENCES public.langchain_pg_collection("uuid") ON DELETE CASCADE
-    );
-    CREATE INDEX ix_cmetadata_gin ON public.langchain_pg_embedding USING gin (cmetadata jsonb_path_ops);
-    CREATE UNIQUE INDEX ix_langchain_pg_embedding_id ON public.langchain_pg_embedding USING btree (id);
-"""
-
 
 create_users_table_sql = """
     CREATE TABLE IF NOT EXISTS public.users (
@@ -75,6 +50,15 @@ create_conversations_table_sql = """
 """
 
 
+def create_documents():
+    try:
+        # Connect to the PostgreSQL database
+        with psycopg.connect(**connection_params) as conn:
+            with conn.cursor() as cur:
+                cur.execute(create_documents_table_sql)
+                conn.commit()
+    except Exception as e:
+        print(f"Error creating table: {e}")
 
 
 def create_conversations():
@@ -84,42 +68,6 @@ def create_conversations():
             with conn.cursor() as cur:
                 # Execute the SQL command to create the table
                 cur.execute(create_conversations_table_sql)
-                conn.commit()
-    except Exception as e:
-        print(f"Error creating table: {e}")
-
-
-def create_extension():
-    try:
-        # Connect to the PostgreSQL database
-        with psycopg.connect(**connection_params) as conn:
-            with conn.cursor() as cur:
-                # Execute the SQL command to create the table
-                cur.execute(create_extension_sql)
-                conn.commit()
-    except Exception as e:
-        print(f"Error creating table: {e}")
-
-
-def create_collection_table():
-    try:
-        # Connect to the PostgreSQL database
-        with psycopg.connect(**connection_params) as conn:
-            with conn.cursor() as cur:
-                # Execute the SQL command to create the table
-                cur.execute(create_collections_table_sql)
-                conn.commit()
-    except Exception as e:
-        print(f"Error creating table: {e}")
-
-
-def create_embedding_table():
-    try:
-        # Connect to the PostgreSQL database
-        with psycopg.connect(**connection_params) as conn:
-            with conn.cursor() as cur:
-                # Execute the SQL command to create the table
-                cur.execute(create_embeddings_table_sql)
                 conn.commit()
     except Exception as e:
         print(f"Error creating table: {e}")
@@ -138,13 +86,9 @@ def create_user_table_sql():
 
 
 if __name__ == "__main__":
-    create_extension()
-    print("Vector extension has been created successfully.")
+    create_documents()
+    print("Table 'documents' created successfully.")
     create_user_table_sql()
     print("Table 'user' created successfully.")
-    create_collection_table()
-    print("Table 'langchain_pg_collection' created successfully.")
-    create_embedding_table()
-    print("Table 'langchain_pg_embedding' created successfully.")
     create_conversations()
     print("Table 'conversations' created successfully.")

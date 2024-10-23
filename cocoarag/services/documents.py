@@ -42,11 +42,10 @@ class SplitTextRecursivelyService:
                 file_name=document.file_name,
                 content=text.page_content.encode('utf-8'),
                 metadata={
-                    # document.metadata['id'] is not real document_id
                     "chunk_id": uuid4().hex,
                     "index": idx,
-                    "filename": document.metadata['filename'],
-                    "topic": document.metadata['topic'],
+                    # document_id (relation on real document) is here
+                    **document.metadata
                 }
             )
 
@@ -62,7 +61,7 @@ class AddDocumentService:
     - SplitTextRecursivelyService
 
     DAOs called inside:
-    - AddDocumentToTableDAO
+    - AddDocumentRelationDAO
     - AddChunksToVectorStoreDAO
     """
     def __call__(self,

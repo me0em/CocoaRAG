@@ -11,16 +11,14 @@ class AddChunksToVectorStoreDAO(DAO):
     def __call__(self,
                  user_id: str,
                  user_group: str,
-                 chunks: list[ChunkModel]) -> str:
+                 chunks: list[ChunkModel]) -> None:
         """Add chunks to the vector store.
-        Use with `AddDocumentDAO` to have a
-        relation: collection>document>chunks
+        Use with `AddDocumentRelationDAO` to have full information
+        about parent document
         """
-        # we create temporary id to use it in
-        # collection name to use it instead of real uuid
-        # (see "Attention!" below)
-        mock_id = "mock_id_" + uuid4().hex
-        vector_store = self.get_vector_store(collection_name=mock_id)
+        vector_store = self.get_vector_store(
+            collection_name=self.config.querieng.basic_collection_name
+        )
 
         langchain_docs = [
             Document(
@@ -35,14 +33,6 @@ class AddChunksToVectorStoreDAO(DAO):
             ids=[doc.metadata["chunk_id"] for doc in langchain_docs]
         )
 
-        # get real document uuid
-        accessor = GetRealCollectionIDDAO()
-        document_id = accessor(
-            collection_name=mock_id
-        )
-
-        return document_id
-
 
 class GetAllDocumentsByUserIDDAO(DAO):
     def __call__(self,
@@ -51,7 +41,7 @@ class GetAllDocumentsByUserIDDAO(DAO):
         function we return documents raw content too
         """
         get_documents_sql = f"""
-            SELECT uuid, name, cmetadata FROM langchain_pg_collection
+            SELECT uuid, name, cmetadata FROM documents
             WHERE user_id = '{user_id}';
         """
         try:
@@ -66,120 +56,57 @@ class GetAllDocumentsByUserIDDAO(DAO):
             print(f"Error extracting document_id: {e}")
 
 
-class GetRealCollectionIDDAO(DAO):
-    """Get document_id that was created 
-    by langchain using mock_id from AddChunksToVectorStoreDAO
-    """
-    def __call__(self,
-                 collection_name: str) -> str:
-        get_document_id_sql = """
-            SELECT uuid FROM langchain_pg_collection
-            WHERE name = '__name__';
-        """
-        try:
-            # Connect to the PostgreSQL database
-            with psycopg.connect(**self.connection_params) as conn:
-                with conn.cursor() as cur:
-                    cur.execute(
-                        get_document_id_sql.replace('__name__', collection_name)
-                    )
-                    document_id = cur.fetchall()
-                    print(f"Document_id successfully extracted id: {document_id[0][0]}")
-                    return document_id[0][0]
-        except Exception as e:
-            print(f"Error extracting document_id: {e}")
-
-
-class UpdateCollectionInfoDAO(DAO):
-    """ Update user_id, user_group, name and content
-    in collection table to add documents
-    and may be transfer ownership later
+class AddDocumentRelationDAO(DAO):
+    """ Add document id, name, content and metadata
+        into dedicated table
     """
     def __call__(self,
                  user_id: str,
                  user_group: str,
-                 content: bytes,
-                 document_id: str) -> None:
-        # ~~~ Attention! ~~~
-        # Due to autism of Langchain developers, we manually
-        # created and expanded the langchain_pg_collection and
-        # langchain_pg_embedding tables to mimic its behavior.
-        # We need to update some values in these tables using
-        # raw SQL. Also, a single collection_name is required
-        # for querying the vector store, so we update it after
-        # adding the real document ID to the users table.
-        update_data_sql = """
-            UPDATE langchain_pg_collection
-            SET user_id = %s, group_id = %s, content = %b, name = %s
-            WHERE uuid = %s;
+                 document: DocumentModel) -> None:
+        # SQL command to insert data into the table
+        insert_data_sql = """
+        INSERT INTO documents
+        (uuid, user_id, user_group, name, content, metadata)
+        VALUES (%s, %s, %s, %s, %s, %s);
         """
         try:
             # Connect to the PostgreSQL database
             with psycopg.connect(**self.connection_params) as conn:
                 with conn.cursor() as cur:
-                    cur.execute(
-                        update_data_sql,
-                        (
-                            user_id,
-                            user_group,
-                            content,
-                            self.config.quering.basic_collection_name,
-                            document_id
-                        )
-                    )
+                    cur.execute(insert_data_sql,
+                                (document.document_id,
+                                 user_id,
+                                 user_group,
+                                 document.file_name,
+                                 document.content,
+                                 document.metadata))
                     conn.commit()
-                    print(f"Document updated successfully with id: {document_id}")
+                    print(f"Document inserted successfully with id: {document.metadata['id']}")
         except Exception as e:
             print(f"Error inserting document: {e}")
 
 
-# class AddFileDAO(DAO):
-#     """ Add raw document with user and collection_id
-#         relations. Use with `AddChunksToVectorStoreDAO`
-#         to have a relation: user>document>chunks
-#     """
-#     def __call__(self,
-#                  user_id: str,
-#                  user_group: str,
-#                  document: DocumentModel) -> None:
-#         # SQL command to insert data into the table
-#         insert_data_sql = """
-#         INSERT INTO files
-#         (user_id, collection_id, raw)
-#         VALUES (%s, %s, %s);
-#         """
-#         try:
-#             # Connect to the PostgreSQL database
-#             with psycopg.connect(**self.connection_params) as conn:
-#                 with conn.cursor() as cur:
-#                     cur.execute(insert_data_sql,
-#                                 (user_id,
-#                                  document.metadata["id"],
-#                                  document.content))
-#                     conn.commit()
-#                     print(f"Document inserted successfully with id: {document.metadata['id']}")
-#         except Exception as e:
-#             print(f"Error inserting document: {e}")
-
-
 class RemoveDocumentDAO(DAO):
-    """ Remove document from langchain_pg_collection
-    table which leads to removing all related chunks
-    from langchain_pg_embedding
+    """ Remove document from documents & langchain_pg_collection
     """
     def __call__(self,
                  document_id: str) -> None:
-        # SQL command to insert data into the table
-        remove_data_sql = """
-            DELETE FROM langchain_pg_collection
-            WHERE uuid = %s;
+        remove_from_documents_table_sql = f"""
+            DELETE FROM documents
+            WHERE document_id = {document_id};
         """
+        remove_from_pg_embedding_sql = f"""
+            DELETE FROM public.langchain_pg_embedding
+            WHERE cmetadata->>'document_id' = {document_id};
+        """
+
         try:
             # Connect to the PostgreSQL database
             with psycopg.connect(**self.connection_params) as conn:
                 with conn.cursor() as cur:
-                    cur.execute(remove_data_sql,
-                                (document_id, ))
+                    cur.execute(remove_from_documents_table_sql)
+                    cur.execute(remove_from_pg_embedding_sql)
                     conn.commit()
                     print(f"Document removed successfully with id: {document_id}")
         except Exception as e:
@@ -187,13 +114,6 @@ class RemoveDocumentDAO(DAO):
 
 
 if __name__ == "__main__":
-
-    # accessor = RemoveDocumentDAO()
-    # accessor(document_id="569938f1-6a15-4419-8319-9ae2b1e04229")
-    # exit()
-
-
-
     user_id = "d18ad67e-aa78-4bab-8e3f-1e50404b3c76"
     accessor = GetAllDocumentsByUserIDDAO()
     docs = accessor(user_id)
