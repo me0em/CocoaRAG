@@ -1,7 +1,9 @@
 # dao/document.py
+import json
 from uuid import uuid4
 from langchain_core.documents import Document
 import psycopg
+from psycopg.types.json import Jsonb
 
 from cocoarag.models.documents import DocumentModel, ChunkModel
 from cocoarag.dao.base import DAO
@@ -17,7 +19,7 @@ class AddChunksToVectorStoreDAO(DAO):
         about parent document
         """
         vector_store = self.get_vector_store(
-            collection_name=self.config.querieng.basic_collection_name
+            collection_name=self.config.quering.basic_collection_name
         )
 
         langchain_docs = [
@@ -41,7 +43,7 @@ class GetAllDocumentsByUserIDDAO(DAO):
         function we return documents raw content too
         """
         get_documents_sql = f"""
-            SELECT uuid, name, cmetadata FROM documents
+            SELECT document_id, name, cmetadata FROM documents
             WHERE user_id = '{user_id}';
         """
         try:
@@ -67,24 +69,25 @@ class AddDocumentRelationDAO(DAO):
         # SQL command to insert data into the table
         insert_data_sql = """
         INSERT INTO documents
-        (uuid, user_id, user_group, name, content, metadata)
+        (document_id, user_id, user_group, name, content, cmetadata)
         VALUES (%s, %s, %s, %s, %s, %s);
         """
-        try:
+        # try:
+        if 1 == 1:
             # Connect to the PostgreSQL database
             with psycopg.connect(**self.connection_params) as conn:
                 with conn.cursor() as cur:
                     cur.execute(insert_data_sql,
-                                (document.document_id,
+                                (document.metadata["document_id"],
                                  user_id,
                                  user_group,
                                  document.file_name,
                                  document.content,
-                                 document.metadata))
+                                 Jsonb(document.metadata)))
                     conn.commit()
-                    print(f"Document inserted successfully with id: {document.metadata['id']}")
-        except Exception as e:
-            print(f"Error inserting document: {e}")
+                    print(f"Document inserted successfully with id: {document.metadata['document_id']}")
+        # except Exception as e:
+            # print(f"Error inserting document: {e}")
 
 
 class RemoveDocumentDAO(DAO):
@@ -94,12 +97,14 @@ class RemoveDocumentDAO(DAO):
                  document_id: str) -> None:
         remove_from_documents_table_sql = f"""
             DELETE FROM documents
-            WHERE document_id = {document_id};
+            WHERE document_id = '{document_id}';
         """
-        remove_from_pg_embedding_sql = f"""
-            DELETE FROM public.langchain_pg_embedding
-            WHERE cmetadata->>'document_id' = {document_id};
-        """
+
+        jsonable_field = json.dumps({"document_id": document_id})
+        remove_from_pg_embedding_sql = """
+            DELETE FROM langchain_pg_embedding
+            WHERE cmetadata @> '%s';
+        """ % jsonable_field
 
         try:
             # Connect to the PostgreSQL database
@@ -110,7 +115,7 @@ class RemoveDocumentDAO(DAO):
                     conn.commit()
                     print(f"Document removed successfully with id: {document_id}")
         except Exception as e:
-            print(f"Error inserting document: {e}")
+            print(f"Error removing document: {e}")
 
 
 if __name__ == "__main__":

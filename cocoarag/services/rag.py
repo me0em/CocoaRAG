@@ -7,11 +7,10 @@ import yaml
 from box import Box
 from openai import OpenAI
 
-from cocoarag.dao.queries import (
-    SimilaritySearchDAO, 
-    GetConversationHistoryDAO,
-    TrimConversationHistoryDAO,
-    LoadConversationHistoryDAO
+from cocoarag.dao.queries import SimilaritySearchDAO
+from cocoarag.services.conversations import (
+    GetConversaionHistoryService,
+    SaveConversationHistoryService
 )
 from cocoarag.models.documents import ChunkModel
 from cocoarag.models.filters import FilterModel
@@ -49,7 +48,6 @@ class BuildContexPromptService:
 
         # Combine the formatted history into a single string
         conversation_history = "\n".join(formatted_history)
-        print('Message example in history: {message}')
 
         # context_payload is {"documents": [chunk1, chunk2]}
         context_payload = {"document": [chunk.content.decode("utf-8") for chunk in chunks]}
@@ -116,43 +114,6 @@ class GenerateAnswerService:
             raise
 
 
-class GetConversaionHistoryService:
-    def __call__(self,
-                 conversation_id: str) -> list[dict]:
-        """ Get conversation history, return empty list
-        if does not exist
-        """
-        accessor = GetConversationHistoryDAO()
-        history = accessor(conversation_id)
-
-        return history
-
-
-class SaveConversationService:
-    def __call__(self,
-                 user_id:str,
-                 conversation_id: str,
-                 qa_history,
-                 new_question,
-                 new_answer) -> None:
-        """ To-Do
-        """
-        accessor = TrimConversationHistoryDAO()
-        history = accessor(
-            qa_history,
-            new_question,
-            new_answer,
-            num=2
-        )
-
-        accessor = LoadConversationHistoryDAO()
-        accessor(
-            user_id,
-            conversation_id,
-            history
-        )
-
-
 class QueryRAGSystemService:
     def __call__(self,
                  user_id: str,
@@ -165,14 +126,11 @@ class QueryRAGSystemService:
         qa_service = GetConversaionHistoryService()
         qa_history: list[Optional[dict]] = qa_service(conversation_id)
 
-        print("=======[QueryRAGSystemService]=======")
-        print('===QA from DataBase for User', qa_history)
-        print('===QA type', type(qa_history))
 
         # user_query_improved = to-do
         # old_query + history + document_summary -> paraphrase for better retriev
 
-        service = GetSimilarChunksService()        
+        service = GetSimilarChunksService()
         chunks: list[ChunkModel] = service(
             user_id=user_id,
             group_id=group_id,
@@ -189,36 +147,25 @@ class QueryRAGSystemService:
         prompt_service = BuildContexPromptService()
         context_prompt = prompt_service(qa_history, chunks)
 
-        print("=======[QueryRAGSystemService]=======")
-        print('===Generated Prompt', context_prompt)
-
-        print("=======[QueryRAGSystemService]=======")
-        print('===User question', query.content)
-
         generation_service = GenerateAnswerService()
         generation_result: str = generation_service(
             context_prompt=context_prompt,
             user_prompt=query.content
         )
 
-        print("=======[QueryRAGSystemService]=======")
-        print('Model answer', generation_result)
-
         answer = AnswerModel(
             trace_id=query.trace_id,
             content=generation_result,
         )
 
-        save_conversation_service = SaveConversationService()
+        save_conversation_service = SaveConversationHistoryService()
         save_conversation_service(
-            user_id, conversation_id,
-            qa_history,
-            query.content,
-            generation_result,
+            user_id=user_id,
+            conversation_id=conversation_id,
+            conversation_history=qa_history,
+            new_question=query.content,
+            new_answer=generation_result
         )
-
-        print("=======[QueryRAGSystemService]=======")
-        print("Conversation saved ...")
 
         return answer
 
@@ -227,6 +174,8 @@ if __name__ == "__main__":
     from cocoarag.dao.queries import AddUserDAO
     from cocoarag.models.documents import DocumentModel
     from cocoarag.services.documents import AddDocumentService
+
+    from cocoarag.dao.queries import SaveConversationHistoryDAO
 
     def create_new_user():
         user_id = uuid4().hex
@@ -245,40 +194,50 @@ if __name__ == "__main__":
         return user_id, user_group
     
     def upload_document(user_id, group_id):
+        import os
+
         filepath = "../../data/Story.txt"
         script_dir = os.path.dirname(os.path.abspath(__file__))
         config_path = os.path.join(script_dir, filepath)
         config_path = os.path.normpath(config_path)
 
-        file_name = "Funny story (FROM services.rag)"
+        file_name = "Gay Fanfik"
 
         with open(config_path, "r") as file:
             document_text = file.read()
 
         document_id = uuid4().hex
 
+        user_id = uuid4().hex
+        group_id = uuid4().hex
+        print(f'User_id: {user_id}, Group_id:{group_id}')
+        print(f'User downloaded the document: {file_name} service created id for it {document_id}')
+
         # document_id goes into metadata
 
         document = DocumentModel(
             trace_id=uuid4().hex,
-            file_name=file_name + document_id,
+            file_name=file_name,
             content=document_text,
             metadata={
-                "filename": file_name + document_id,
-                "id": document_id,
+                "filename": file_name,
+                "document_id": document_id,
                 "user_id": user_id,
-                "topic": "test_rag"
+                "topic": "test",
+                "location": "London"
             }
         )
-        
-        print(f'Document name: {file_name} | Document ID: {document_id}')
-        
+
+        print("Document model has been created")
+
         service = AddDocumentService()
         service(
             user_id=user_id,
-            user_group=group_id, 
+            user_group=group_id,
             document=document
         )
+
+        print(f"Document has been added with id: {document.metadata['document_id']}")
 
     def save_conversation_info(user_id, conversation_id):
         history = [
@@ -289,7 +248,7 @@ if __name__ == "__main__":
              around 2.1 million."}
         ]
 
-        save_conversation_service = LoadConversationHistoryDAO()
+        save_conversation_service = SaveConversationHistoryDAO()
         save_conversation_service(user_id, conversation_id, history)
 
     def check_conversations_work():
@@ -309,11 +268,11 @@ if __name__ == "__main__":
         print("======Answer with already existing conversation ========")
 
         query = QueryModel(
-            trace_id = uuid4().hex,
+            trace_id=uuid4().hex,
             content="What is the name of Petya friend? And population in Paris?"
         )
         filter = FilterModel(
-            content = {}
+            content={}
         )
         rag_query = QueryRAGSystemService()
         answer = rag_query(
@@ -322,45 +281,31 @@ if __name__ == "__main__":
 
         print(answer)
 
-    check_conversations_work()
-# ------------------------------------------------------
+    def pizdezh():
+        user_id, user_group = create_new_user()
+        upload_document(user_id, user_group)
+        conversation_id = uuid4().hex
 
-    def check_retrieve():
-        str_query = "What Queen said to Alice?"
-        
-        query = QueryModel(
-            trace_id=uuid4().hex,
-            content=str_query
-        )
+        try:
+            "📖 Conversation started. To interrupt press Control+C"
+            while True:
+                raw_query = input("🧐 Question: ")
+                query = QueryModel(trace_id=uuid4().hex, content=raw_query)
+                filters = FilterModel(content={})
+                rag_query = QueryRAGSystemService()
+                answer = rag_query(
+                    user_id,
+                    user_group,
+                    conversation_id,
+                    query,
+                    filters
+                )
+                print(f"🤖 AI: {answer.content}")
 
-        # query_filter = {
-        #     "$and": [
-        #         {"chunk_id": {"$in": ["id4", "id5", "id228"]}},
-        #         {"topic": {"$in": ["filter_check"]}},
-        #     ]
-        # }
+        except KeyboardInterrupt:
+            print("\n\n💀 Conversation has been interrupted by user\n\n")
 
-        query_filter={
-            "chunk_id": {"$in": ["id4", "id5", "id228"]}, 
-            "topic": {"$in": ["filter_check"]},
-            # "mashroom" : {"$in": ["filter_check"]}
-        }
 
-        query_filter = {}
+    # check_conversations_work()
 
-        filter = FilterModel(
-            content=query_filter
-        )
-
-        rag_service = QueryRAGSystemService()
-
-        answer = rag_service(
-            user_id=uuid4().hex,
-            group_id=uuid4().hex,
-            query=query,
-            filter=filter
-        )
-
-        print(answer)
-
-    # check_retrieve()
+    pizdezh()

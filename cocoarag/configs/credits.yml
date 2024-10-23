@@ -17,3 +17,5 @@ retrieve_model:
   open_ai:
     token: "sk-proj-CaQmXdDzM5UocOhHH9a4T3BlbkFJGuQaDNYBmBj4i1hvkSBo"
     model: "gpt-4o-mini"
+conversations:
+  trim_limit: 2

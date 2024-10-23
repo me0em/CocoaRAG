@@ -23,17 +23,14 @@ class DocumentModel(BaseModel):
     file_name: str = Field(description="Filename")
     content: bytes = Field(description="Raw content")
     metadata: dict  # TODO: validation & обязательные поля типа названия
-    document_id: Optional[str] = None  # fill this up when give docs to user
 
-    @field_validator("content")
+    @field_validator("metadata")
     @staticmethod
-    def validate_file_size(v):
-        min_size = 1  # 1 byte
+    def validate_document_id_in_metadata(metadata):
+        if "document_id" not in metadata:
+            raise ValueError("document_id is missing in metadata")
 
-        if len(v) < min_size:
-            raise ValueError("File is too small. The minimum allowed file size is 512 bytes.")
-
-        return v
+        return metadata
 
 
 class ChunkModel(DocumentModel):

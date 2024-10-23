@@ -17,7 +17,7 @@ CREATE TABLE public.documents (
     "user_group" uuid,
     "name" varchar NOT NULL,
     "content" bytea,
-    cmetadata json,
+    cmetadata json
 );
 """
 
