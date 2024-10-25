@@ -4,18 +4,18 @@ from typing import Optional
 
 from cocoarag.dao.base import DAO
 from cocoarag.models.documents import ChunkModel
-from cocoarag.models.filters import FilterModel
+from cocoarag.models.filters import FiltersModel
 from cocoarag.models.queries import QueryModel
 
 
 class GetConversationHistoryDAO(DAO):
     def __call__(self,
-                 conversation_id: str) -> list[Optional[dict|None]]:
+                 conversation_id: str) -> list[Optional[dict | None]]:
         """ Get conversation history, return empty list
         if does not exist
         """
         select_conversation_sql = """
-            SELECT content 
+            SELECT content
             FROM public.conversations
             WHERE conversation_id = %s;
         """
@@ -25,11 +25,10 @@ class GetConversationHistoryDAO(DAO):
                 with conn.cursor() as cur:
                     cur.execute(select_conversation_sql, (conversation_id,))
                     history = cur.fetchall()
-                    
+
                     if history:
                         return history[0][0]
                     else:
-                        print(f"Conversation with ID {conversation_id} not found.")
                         return []
         except Exception as e:
             print(f"Error extracting document_id: {e}")
@@ -41,8 +40,8 @@ class SaveConversationHistoryDAO(DAO):
                  conversation_id: str,
                  content: dict) -> None:
         """ Save conversation into table 'conversations'.
-        The query uses INSERT INTO ... ON CONFLICT (conversation_id) DO UPDATE, 
-        which allows to add a new conversation and, if a conversation with that 
+        The query uses INSERT INTO ... ON CONFLICT (conversation_id) DO UPDATE,
+        which allows to add a new conversation and, if a conversation with that
         conversation_id already exists, update the content field.
 
         Args:
@@ -92,7 +91,7 @@ class AddUserDAO(DAO):
                     cur.execute(
                         insert_user_sql,
                         (
-                            user_id, 
+                            user_id,
                             group_id,
                             username,
                             email,
@@ -106,17 +105,13 @@ class AddUserDAO(DAO):
             raise
 
 
-# --------------------------- {} ---------------------------
-
-
 class SimilaritySearchDAO(DAO):
     """ Extract chunk from vector store
     """
     def __call__(self,
                  query: QueryModel,
-                 filter: FilterModel) -> list[ChunkModel]:
-        # collection_name is a general collection name
-        # from config
+                 filters: FiltersModel) -> list[ChunkModel]:
+        # collection_name is a general collection name from config
         vector_store = self.get_vector_store(
             self.config.quering.basic_collection_name
         )
@@ -125,16 +120,8 @@ class SimilaritySearchDAO(DAO):
         scored_langchain_docs = vector_store.similarity_search_with_relevance_scores(
             query.content,
             k=self.config.quering.k,
-            filter=filter.content, # Filter model
+            filter=filters.content,
         )
-
-        # print(langchain_docs)
-        # print(vector_store.similarity_search_with_relevance_scores)
-        # print(vector_store.similarity_search_with_relevance_scores.__doc__)
-        # print(langchain_docs)
-        # d = langchain_docs[0]
-        # print(d)
-        # print(d.__dir__())
 
         chunks = []
         for doc, score in scored_langchain_docs:

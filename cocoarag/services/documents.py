@@ -2,6 +2,7 @@
 from uuid import uuid4
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import TextLoader
 
 from cocoarag.dao.documents import (
     AddChunksToVectorStoreDAO,
@@ -12,6 +13,18 @@ from cocoarag.models.documents import (
     DocumentModel,
     ChunkModel
 )
+
+
+
+class LoadersRoutingService:
+    """ Map different docs on different loaders
+    by its extenstions
+    """
+    def __init__(self):
+        self.mapper = {
+            "pdf": ...,
+            "txt": TextLoader
+        }
 
 
 class SplitTextRecursivelyService:
@@ -68,6 +81,11 @@ class AddDocumentService:
                  user_id: str,
                  user_group: str,
                  document: DocumentModel) -> None:
+        # we need user_id in metadata to pass it in chunks
+        # to filter relevant content
+        if "user_id" not in document.metadata:
+            document.metadata["user_id"] = user_id
+
         # split document content:
         service = SplitTextRecursivelyService()
         chunks: list[ChunkModel] = service(document)
@@ -123,7 +141,7 @@ if __name__ == "__main__":
         print(f'User downloaded the document: {file_name} service created id for it {document_id}')
 
         # document_id goes into metadata
-
+ 
         document = DocumentModel(
             trace_id=uuid4().hex,
             file_name=file_name,
@@ -152,8 +170,8 @@ if __name__ == "__main__":
         service = RemoveDocumentService()
         service(document_id=document_id)
 
-    # flag = "add"
-    flag = "delete"
+    flag = "add"
+    # flag = "delete"
 
     if flag == "add":
         add_file_test()

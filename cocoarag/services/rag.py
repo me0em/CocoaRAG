@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Optional
 import os
 from uuid import uuid4
 import json
@@ -13,7 +13,7 @@ from cocoarag.services.conversations import (
     SaveConversationHistoryService
 )
 from cocoarag.models.documents import ChunkModel
-from cocoarag.models.filters import FilterModel
+from cocoarag.models.filters import FiltersModel
 from cocoarag.models.queries import QueryModel, AnswerModel
 from cocoarag.prompts.rag import rag_template_english_v1
 
@@ -23,12 +23,12 @@ class GetSimilarChunksService:
                  user_id: str,
                  group_id: str,
                  query: QueryModel,
-                 filter: FilterModel) -> list[ChunkModel]:
+                 filters: FiltersModel) -> list[ChunkModel]:
         """ Get relevant chunks with respect to user's query
         The amount of chunks (k) is a config value
         """
         accessor = SimilaritySearchDAO()
-        chunks = accessor(query=query, filter=filter)
+        chunks = accessor(query=query, filters=filters)
 
         return chunks
 
@@ -120,22 +120,25 @@ class QueryRAGSystemService:
                  group_id: str,
                  conversation_id: str,
                  query: QueryModel,
-                 filter: FilterModel) -> AnswerModel:
+                 filters: FiltersModel) -> AnswerModel:
         """ Get user's query, process it and return answer
         """
+        # TODO: history summary if it is necessary
         qa_service = GetConversaionHistoryService()
         qa_history: list[Optional[dict]] = qa_service(conversation_id)
 
-
-        # user_query_improved = to-do
-        # old_query + history + document_summary -> paraphrase for better retriev
-
         service = GetSimilarChunksService()
+
+        if filters.content == {}:
+            filters = FiltersModel(
+                content={"user_id": {"$in": [user_id]}}
+            )
+
         chunks: list[ChunkModel] = service(
             user_id=user_id,
             group_id=group_id,
             query=query,
-            filter=filter
+            filters=filters
         )
 
         if not chunks:
@@ -208,13 +211,6 @@ if __name__ == "__main__":
 
         document_id = uuid4().hex
 
-        user_id = uuid4().hex
-        group_id = uuid4().hex
-        print(f'User_id: {user_id}, Group_id:{group_id}')
-        print(f'User downloaded the document: {file_name} service created id for it {document_id}')
-
-        # document_id goes into metadata
-
         document = DocumentModel(
             trace_id=uuid4().hex,
             file_name=file_name,
@@ -228,16 +224,12 @@ if __name__ == "__main__":
             }
         )
 
-        print("Document model has been created")
-
         service = AddDocumentService()
         service(
             user_id=user_id,
             user_group=group_id,
             document=document
         )
-
-        print(f"Document has been added with id: {document.metadata['document_id']}")
 
     def save_conversation_info(user_id, conversation_id):
         history = [
@@ -271,19 +263,21 @@ if __name__ == "__main__":
             trace_id=uuid4().hex,
             content="What is the name of Petya friend? And population in Paris?"
         )
-        filter = FilterModel(
+        filters = FiltersModel(
             content={}
         )
         rag_query = QueryRAGSystemService()
         answer = rag_query(
-            user_id, user_group, conversation_id, query, filter
+            user_id, user_group, conversation_id, query, filters
         )
 
         print(answer)
 
     def pizdezh():
         user_id, user_group = create_new_user()
+        print(f"Create user: {user_id}")
         upload_document(user_id, user_group)
+        print("Document has been uploaded")
         conversation_id = uuid4().hex
 
         try:
@@ -291,7 +285,7 @@ if __name__ == "__main__":
             while True:
                 raw_query = input("🧐 Question: ")
                 query = QueryModel(trace_id=uuid4().hex, content=raw_query)
-                filters = FilterModel(content={})
+                filters = FiltersModel(content={})
                 rag_query = QueryRAGSystemService()
                 answer = rag_query(
                     user_id,
@@ -304,7 +298,6 @@ if __name__ == "__main__":
 
         except KeyboardInterrupt:
             print("\n\n💀 Conversation has been interrupted by user\n\n")
-
 
     # check_conversations_work()
 

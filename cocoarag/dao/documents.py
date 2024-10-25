@@ -1,6 +1,5 @@
 # dao/document.py
 import json
-from uuid import uuid4
 from langchain_core.documents import Document
 import psycopg
 from psycopg.types.json import Jsonb
@@ -123,9 +122,7 @@ if __name__ == "__main__":
     accessor = GetAllDocumentsByUserIDDAO()
     docs = accessor(user_id)
     print("===>>>", docs)
-    exit()
-
-
+    """
     filename = "King Arthur (FROM DAO)"
 
     dummy_chunks = [
@@ -205,3 +202,4 @@ if __name__ == "__main__":
     # accessor = AddDocumentToTableDAO()
     # accessor(user_group="test", document=dummy_document)
     # print("Insert document to the database")
+    """
