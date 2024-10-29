@@ -24,7 +24,7 @@ CREATE TABLE public.documents (
 create_users_table_sql = """
     CREATE TABLE IF NOT EXISTS public.users (
     user_id UUID PRIMARY KEY, -- Primary key defined here
-    group_id UUID,
+    user_group UUID,
     username VARCHAR(255) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE,
     password_hash VARCHAR(255),

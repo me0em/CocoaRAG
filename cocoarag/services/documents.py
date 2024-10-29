@@ -15,16 +15,15 @@ from cocoarag.models.documents import (
 )
 
 
-
-class LoadersRoutingService:
-    """ Map different docs on different loaders
-    by its extenstions
-    """
-    def __init__(self):
-        self.mapper = {
-            "pdf": ...,
-            "txt": TextLoader
-        }
+# class LoadersRoutingService:
+#     """ Map different docs on different loaders
+#     by its extenstions
+#     """
+#     def __init__(self):
+#         self.mapper = {
+#             "pdf": ...,
+#             "txt": TextLoader
+#         }
 
 
 class SplitTextRecursivelyService:
