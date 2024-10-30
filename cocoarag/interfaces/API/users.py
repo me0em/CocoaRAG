@@ -2,7 +2,7 @@ from cocoarag.models.users import UserModel
 
 import fastapi
 
-from cocoarag.use_cases.users import AddUserUseCase
+from cocoarag.use_cases.users import AddUserAPIUseCase
 
 
 router = fastapi.APIRouter(
@@ -14,7 +14,7 @@ router = fastapi.APIRouter(
 @router.post("/add")
 async def add_user(request: UserModel):
     try:
-        use_case = AddUserUseCase()
+        use_case = AddUserAPIUseCase()
         use_case(request)
         return {"status": "success"}
     except Exception as e:

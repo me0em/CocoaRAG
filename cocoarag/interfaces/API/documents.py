@@ -1,9 +1,9 @@
+import json
+
 import fastapi
 
-from pydantic import BaseModel
+from cocoarag.use_cases.documents import AddDocumentAPIUseCase
 
-from cocoarag.models.documents import DocumentModel
-from cocoarag.use_cases.documents import AddDocumentUseCase
 
 router = fastapi.APIRouter(
     tags=["documents"],
@@ -11,21 +11,32 @@ router = fastapi.APIRouter(
 )
 
 
-class AddDocumentRequest(BaseModel):
-    user_id: str
-    user_group: str
-    document: DocumentModel
-
-
 @router.post("/add")
-async def add_document(request: AddDocumentRequest):
+async def add_document(
+    user_id: str,
+    user_group: str,
+    file: fastapi.UploadFile,
+    metadata: str
+):
+    print(metadata)
+
     try:
-        use_case = AddDocumentUseCase()
+        content: bytes = await file.read()
+        metadata: dict = json.loads(metadata)
+
+        print(metadata)
+
+        use_case = AddDocumentAPIUseCase()
         use_case(
-            user_id=request.user_id,
-            user_group=request.user_group,
-            document=request.document
+            user_id=user_id,
+            user_group=user_group,
+            filename=file.filename,
+            metadata=metadata,
+            file_content=content
         )
         return {"status": "success"}
     except Exception as e:
-        raise fastapi.HTTPException(status_code=500, detail=str(e))
+        raise fastapi.HTTPException(
+            status_code=500,
+            detail=str(e)
+        )

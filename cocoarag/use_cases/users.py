@@ -3,7 +3,7 @@ from cocoarag.models.users import UserModel
 from cocoarag.services.users import AddUserService
 
 
-class AddUserUseCase:
+class AddUserAPIUseCase:
     def __call__(self,
                  user: UserModel) -> None:
         service = AddUserService()

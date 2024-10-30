@@ -85,6 +85,9 @@ class AddDocumentService:
         if "user_id" not in document.metadata:
             document.metadata["user_id"] = user_id
 
+        if "user_group" not in document.metadata:
+            document.metadata["user_group"] = user_group
+
         # split document content:
         service = SplitTextRecursivelyService()
         chunks: list[ChunkModel] = service(document)
