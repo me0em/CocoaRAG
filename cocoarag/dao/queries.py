@@ -75,11 +75,15 @@ class SimilaritySearchDAO(DAO):
     """
     def __call__(self,
                  query: QueryModel,
-                 filters: FiltersModel) -> list[ChunkModel]:
+                 filters: FiltersModel,
+                 k: Optional[int] = None) -> list[ChunkModel]:
         # collection_name is a general collection name from config
         vector_store = self.get_vector_store(
             self.config.quering.basic_collection_name
         )
+
+        if k is None:
+            k = self.config.quering.k
 
         # scored_langchain_docs is [(Document, float), ...]
         scored_langchain_docs = vector_store.similarity_search_with_relevance_scores(

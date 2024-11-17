@@ -13,19 +13,38 @@ from cocoarag.models.documents import (
     DocumentModel,
     ChunkModel
 )
+from cocoarag.models.filters import FiltersModel
+from cocoarag.models.queries import QueryModel
+from cocoarag.services.facts import ExtractFactsService
+from cocoarag.dao.queries import SimilaritySearchDAO
 
-from cocoa.services.facts import ExtractFactsService
 
+class GetAllDocumentChunksService:
+    def __call__(self,
+                 document_id: str,
+                 trace_id: str) -> list[ChunkModel]:
 
-# class LoadersRoutingService:
-#     """ Map different docs on different loaders
-#     by its extenstions
-#     """
-#     def __init__(self):
-#         self.mapper = {
-#             "pdf": ...,
-#             "txt": TextLoader
-#         }
+        query = QueryModel(
+            trace_id=trace_id,
+            content="Any text here, k = 1e+6"
+        )
+
+        filters = FiltersModel(
+            content={
+                "document_id": {
+                    "$in": [document_id]
+                }
+            }
+        )
+
+        accessor = SimilaritySearchDAO()
+        chunks = accessor(
+            query=query,
+            filters=filters,
+            k=1e+6
+        )
+
+        return chunks
 
 
 class SplitTextRecursivelyService:
@@ -93,7 +112,11 @@ class AddDocumentService:
         # we do not use splitter here because we interpret facts as chunks
 
         extractor = ExtractFactsService()
-        raw_facts: list[str] = extractor(document.content.decode("utf-8"))
+        query = QueryModel(
+            trace_id=document.trace_id,
+            content=document.content.decode("utf-8")
+        )
+        raw_facts: list[str] = extractor(query)
 
         chunks: list[ChunkModel] = []
         for idx, raw_fact in enumerate(raw_facts):
@@ -137,33 +160,44 @@ class RemoveDocumentService:
 
 
 if __name__ == "__main__":
-    file_name = "Linkoln"
-    raw = """Линкольн лично направлял военные действия, которые привели к победе над Конфедерацией во время Гражданской войны 1861—1865 годов. Его президентская деятельность привела к усилению исполнительной власти и отмене рабства на территории США. Линкольн включил в состав правительства ряд своих противников и смог привлечь их к работе над общей целью. Президент на всём протяжении войны удерживал Великобританию и другие европейские страны от интервенции. В его президентство построена трансконтинентальная железная дорога, принят Гомстед-акт, решивший аграрный вопрос. Линкольн был выдающимся оратором, его речи вдохновляли северян и являются ярким наследием до сих пор. По окончании войны предложил план умеренной Реконструкции, связанный с национальным согласием и отказом от мести. 14 апреля 1865 года Линкольн был смертельно ранен в театре, став первым убитым президентом США. Согласно общепринятой точке зрения и социальным опросам, он по-прежнему остаётся одним из лучших и самых любимых президентов Америки, хотя во время президентства подвергался суровой критике."""
-    document_id = uuid4().hex
-    user_id = uuid4().hex
-    group_id = uuid4().hex
-    print(f'User_id: {user_id}, Group_id:{group_id}')
-    print(f'User downloaded the document: {file_name} service created id for it {document_id}')
+    # file_name = "Linkoln"
+    # raw = """Линкольн лично направлял военные действия, которые привели к победе над Конфедерацией во время Гражданской войны 1861—1865 годов. Его президентская деятельность привела к усилению исполнительной власти и отмене рабства на территории США. Линкольн включил в состав правительства ряд своих противников и смог привлечь их к работе над общей целью. Президент на всём протяжении войны удерживал Великобританию и другие европейские страны от интервенции. В его президентство построена трансконтинентальная железная дорога, принят Гомстед-акт, решивший аграрный вопрос. Линкольн был выдающимся оратором, его речи вдохновляли северян и являются ярким наследием до сих пор. По окончании войны предложил план умеренной Реконструкции, связанный с национальным согласием и отказом от мести. 14 апреля 1865 года Линкольн был смертельно ранен в театре, став первым убитым президентом США. Согласно общепринятой точке зрения и социальным опросам, он по-прежнему остаётся одним из лучших и самых любимых президентов Америки, хотя во время президентства подвергался суровой критике."""
+    # document_id = uuid4().hex
+    # user_id = uuid4().hex
+    # group_id = uuid4().hex
+    # print(f'User_id: {user_id}, Group_id:{group_id}')
+    # print(f'User downloaded the document: {file_name} service created id for it {document_id}')
 
-    document = DocumentModel(
-        trace_id=uuid4().hex,
-        file_name=file_name,
-        content=raw.encode("utf-8"),
-        metadata={
-            "filename": file_name,
-            "document_id": document_id,
-            "user_id": user_id,
-            "topic": "paper"
-        }
+    # document = DocumentModel(
+    #     trace_id=uuid4().hex,
+    #     file_name=file_name,
+    #     content=raw.encode("utf-8"),
+    #     metadata={
+    #         "filename": file_name,
+    #         "document_id": document_id,
+    #         "user_id": user_id,
+    #         "topic": "paper"
+    #     }
+    # )
+
+    # print(f"Document model has been created: {document.file_name}")
+
+    # service = AddDocumentService()
+    # service(
+    #     user_id=user_id,
+    #     user_group=group_id,
+    #     document=document
+    # )
+
+    # print(f"Document has been added with id: {document.metadata['document_id']}")
+
+    document_id = "3e6edbaa149f4cfb9958b5ef648a9f63"
+
+    service = GetAllDocumentChunksService()
+    chunks: list[ChunkModel] = service(
+        document_id=document_id,
+        trace_id=uuid4().hex
     )
 
-    print(f"Document model has been created: {document}")
-
-    service = AddDocumentService()
-    service(
-        user_id=user_id,
-        user_group=group_id,
-        document=document
-    )
-
-    print(f"Document has been added with id: {document.metadata['document_id']}")
+    for chunk in chunks:
+        print(f"• {chunk.content.decode('utf-8')}")

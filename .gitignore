@@ -3,7 +3,8 @@
 *.pyo
 __pycache__/
 configs/credits.yml
-credits.ym
+credits.yaml
+credits.yml
 *.pyc
 cocoaragenv
 cocoaragenv/*

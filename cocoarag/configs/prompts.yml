@@ -7,7 +7,7 @@ extraction:
     Не используйте местоимения в качестве подлежащего
     или дополнения в синтаксической структуре каждого факта.
     Факты должны быть абсолютно независимыми друг от друга.
-    Выведите факты в формате JSON:
+    Выведи факты в формате JSON:
     ```json
     {"facts": ["...", ...]}
     ```
@@ -34,4 +34,22 @@ facts_equal:
     Выведи ответ в формате JSON, например:
     ```json
     {"answer": true}
+    ```
+
+question_generation:
+  en: >
+    Generate a question based on the provided facts.
+    Ensure all the facts are used in the question.
+    The question should have clear and simple syntax.
+    Print question in json format:
+    ```json
+    {"question": "..."}
+    ```
+  ru: >
+    Сгенерируй вопрос на основе предоставленных фактов.
+    Убедись, что в сгенерированном вопросе использованы все факты.
+    Вопрос должен иметь понятный и простой синтаксис.
+    Выведи вопрос в формате JSON:
+    ```json
+    {"question": "..."}
     ```
