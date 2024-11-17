@@ -19,7 +19,7 @@ class ConversationsList(BaseModel):
     conversations: list[str]
 
 
-@router.post("/list")
+@router.get("/list")
 async def list_converstions(
     user_id: str,
 ) -> ConversationsList:

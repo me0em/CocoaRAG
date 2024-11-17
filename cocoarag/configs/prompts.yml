@@ -1,0 +1,37 @@
+extraction:
+  ru: >
+    Разложи текст на список коротких фактов.
+    Убедись, что факты можно найти в данном отрывке.
+    Факты должны быть связными и лаконичными предложениями
+    с ясной и простой синтаксической структурой.
+    Не используйте местоимения в качестве подлежащего
+    или дополнения в синтаксической структуре каждого факта.
+    Факты должны быть абсолютно независимыми друг от друга.
+    Выведите факты в формате JSON:
+    ```json
+    {"facts": ["...", ...]}
+    ```
+  en: >
+    Decompose the given passage into a list of short facts.
+    Make sure that the facts can be found in the given passage.
+    The facts should be coherent and succint sentences with clear and simple syntax.
+    Do not use pronouns as the subject or object in the syntax of each fact.
+    The facts should be absolutly independent to each other.
+    Print facts in json format:
+    ```json
+    {"facts": ["...", ...]}
+    ```
+
+facts_equal:
+  en: >
+    Are two facts strictly identical in meaning?
+    Output the answer in JSON format, for example:
+    ```json
+    {“answer”: true}
+    ```
+  ru: >
+    Являются ли два факта строго идентичными по смыслу?
+    Выведи ответ в формате JSON, например:
+    ```json
+    {"answer": true}
+    ```
