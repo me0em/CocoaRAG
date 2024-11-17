@@ -14,6 +14,8 @@ from cocoarag.models.documents import (
     ChunkModel
 )
 
+from cocoa.services.facts import ExtractFactsService
+
 
 # class LoadersRoutingService:
 #     """ Map different docs on different loaders
@@ -88,9 +90,23 @@ class AddDocumentService:
         if "user_group" not in document.metadata:
             document.metadata["user_group"] = user_group
 
-        # split document content:
-        service = SplitTextRecursivelyService()
-        chunks: list[ChunkModel] = service(document)
+        # we do not use splitter here because we interpret facts as chunks
+
+        extractor = ExtractFactsService()
+        raw_facts: list[str] = extractor(document.content.decode("utf-8"))
+
+        chunks: list[ChunkModel] = []
+        for idx, raw_fact in enumerate(raw_facts):
+            metadata = document.metadata
+            metadata["chunk_id"] = str(idx)
+            fact = ChunkModel(
+                trace_id=document.trace_id,
+                file_name=document.file_name,
+                content=raw_fact.encode("utf-8"),
+                metadata=metadata
+            )
+
+            chunks.append(fact)
 
         # insert chunks to the table
         accessor = AddChunksToVectorStoreDAO()
@@ -121,61 +137,33 @@ class RemoveDocumentService:
 
 
 if __name__ == "__main__":
+    file_name = "Linkoln"
+    raw = """Линкольн лично направлял военные действия, которые привели к победе над Конфедерацией во время Гражданской войны 1861—1865 годов. Его президентская деятельность привела к усилению исполнительной власти и отмене рабства на территории США. Линкольн включил в состав правительства ряд своих противников и смог привлечь их к работе над общей целью. Президент на всём протяжении войны удерживал Великобританию и другие европейские страны от интервенции. В его президентство построена трансконтинентальная железная дорога, принят Гомстед-акт, решивший аграрный вопрос. Линкольн был выдающимся оратором, его речи вдохновляли северян и являются ярким наследием до сих пор. По окончании войны предложил план умеренной Реконструкции, связанный с национальным согласием и отказом от мести. 14 апреля 1865 года Линкольн был смертельно ранен в театре, став первым убитым президентом США. Согласно общепринятой точке зрения и социальным опросам, он по-прежнему остаётся одним из лучших и самых любимых президентов Америки, хотя во время президентства подвергался суровой критике."""
+    document_id = uuid4().hex
+    user_id = uuid4().hex
+    group_id = uuid4().hex
+    print(f'User_id: {user_id}, Group_id:{group_id}')
+    print(f'User downloaded the document: {file_name} service created id for it {document_id}')
 
-    def add_file_test():
-        import os
+    document = DocumentModel(
+        trace_id=uuid4().hex,
+        file_name=file_name,
+        content=raw.encode("utf-8"),
+        metadata={
+            "filename": file_name,
+            "document_id": document_id,
+            "user_id": user_id,
+            "topic": "paper"
+        }
+    )
 
-        filepath = "../../data/Story.txt"
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        config_path = os.path.join(script_dir, filepath)
-        config_path = os.path.normpath(config_path)
+    print(f"Document model has been created: {document}")
 
-        file_name = "Alice in Wonderland"
+    service = AddDocumentService()
+    service(
+        user_id=user_id,
+        user_group=group_id,
+        document=document
+    )
 
-        with open(config_path, "r") as file:
-            document_text = file.read()
-
-        document_id = uuid4().hex
-
-        user_id = uuid4().hex
-        group_id = uuid4().hex
-        print(f'User_id: {user_id}, Group_id:{group_id}')
-        print(f'User downloaded the document: {file_name} service created id for it {document_id}')
-
-        # document_id goes into metadata
- 
-        document = DocumentModel(
-            trace_id=uuid4().hex,
-            file_name=file_name,
-            content=document_text,
-            metadata={
-                "filename": file_name,
-                "document_id": document_id,
-                "user_id": user_id,
-                "topic": "test",
-                "location": "London"
-            }
-        )
-
-        print("Document model has been created")
-
-        service = AddDocumentService()
-        service(
-            user_id=user_id,
-            user_group=group_id,
-            document=document
-        )
-
-        print(f"Document has been added with id: {document.metadata['document_id']}")
-
-    def delete_file_test(document_id):
-        service = RemoveDocumentService()
-        service(document_id=document_id)
-
-    flag = "add"
-    # flag = "delete"
-
-    if flag == "add":
-        add_file_test()
-    elif flag == "delete":
-        delete_file_test("628dc37104004f61bd1e63287ba90cf9")
+    print(f"Document has been added with id: {document.metadata['document_id']}")
