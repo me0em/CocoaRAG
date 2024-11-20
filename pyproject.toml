@@ -2,7 +2,10 @@
 name = "cocoarag"
 version = "0.1.0"
 description = ""
-authors = ["seeusoon <to.asmarkov@gmail.com>"]
+authors = [
+    "seeusoon <to.asmarkov@gmail.com>",
+    "nahum-maurice <nahum.maurice.nm@gmail.com>"
+]
 readme = "README.md"
 
 [tool.poetry.dependencies]
