@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 
 class QueryModel(BaseModel):
-    """ A model representing a user query with a unique trace ID
+    """A model representing a user query with a unique trace ID
     and string content.
 
     Attributes:
@@ -15,9 +15,12 @@ class QueryModel(BaseModel):
     Methods:
         validate_content_size(v): Validates the size of the query content.
     """
-    trace_id: UUID = Field(default_factory=uuid4,
-                           frozen=True,
-                           description="UUID represents a single user interaction")
+
+    trace_id: UUID = Field(
+        default_factory=uuid4,
+        frozen=True,
+        description="UUID represents a single user interaction",
+    )
     content: str = Field(description="User query")
 
     @field_validator("content")
@@ -32,7 +35,8 @@ class QueryModel(BaseModel):
 
 
 class AnswerModel(QueryModel):
-    """ Same as QueryModel, but
+    """Same as QueryModel, but
     used for storing model answers
     """
+
     pass

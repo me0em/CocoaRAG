@@ -11,10 +11,7 @@ data = {
     "username": "test_username",
     "email": "test@test.com",
     "password_hash": "test_hashed_password",
-    "metadata": {
-        "role": "admin",
-        "created_at": "2024-10-01T00:00:00Z"
-    }
+    "metadata": {"role": "admin", "created_at": "2024-10-01T00:00:00Z"},
 }
 
 response = requests.post(url, json=data)

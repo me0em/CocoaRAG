@@ -3,10 +3,9 @@ from cocoarag.models.users import UserModel
 
 
 class AddUserService:
-    """ User sign up
-    """
-    def __call__(self,
-                 user: UserModel) -> None:
+    """User sign up"""
+
+    def __call__(self, user: UserModel) -> None:
         accessor = AddUserDAO()
         accessor(
             user.user_id,
@@ -14,5 +13,5 @@ class AddUserService:
             user.username,
             user.email,
             user.password_hash,
-            user.metadata
+            user.metadata,
         )

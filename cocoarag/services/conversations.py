@@ -4,16 +4,12 @@ import os
 import yaml
 from box import Box
 
-from cocoarag.dao.queries import (
-    GetConversationHistoryDAO,
-    SaveConversationHistoryDAO
-)
+from cocoarag.dao.queries import GetConversationHistoryDAO, SaveConversationHistoryDAO
 
 
 class GetConversaionHistoryService:
-    def __call__(self,
-                 conversation_id: str) -> list[dict]:
-        """ Get conversation history, return empty list
+    def __call__(self, conversation_id: str) -> list[dict]:
+        """Get conversation history, return empty list
         if does not exist
         """
         accessor = GetConversationHistoryDAO()
@@ -40,33 +36,31 @@ class SaveConversationHistoryService:
             print(f"Error loading configuration file: {e}")
             raise
 
-    def trim_conversation(self,
-                          conversation_history: list[Optional[dict]],
-                          new_question: str,
-                          new_answer: str) -> list[Optional[dict]]:
+    def trim_conversation(
+        self,
+        conversation_history: list[Optional[dict]],
+        new_question: str,
+        new_answer: str,
+    ) -> list[Optional[dict]]:
         conversation_history.append({"role": "user", "content": new_question})
         conversation_history.append({"role": "assistant", "content": new_answer})
 
-        return conversation_history[-2*self.config.conversations.trim_limit:]
+        return conversation_history[-2 * self.config.conversations.trim_limit :]
 
-    def __call__(self,
-                 user_id: str,
-                 conversation_id: str,
-                 conversation_history: list[Optional[dict]],
-                 new_question: str,
-                 new_answer: str) -> None:
-        """ INSERT or UPDATE (if already exists) last `k`
+    def __call__(
+        self,
+        user_id: str,
+        conversation_id: str,
+        conversation_history: list[Optional[dict]],
+        new_question: str,
+        new_answer: str,
+    ) -> None:
+        """INSERT or UPDATE (if already exists) last `k`
         (Q, A) pairs to database (where k is a config value)
         """
         updated_conv_history = self.trim_conversation(
-            conversation_history,
-            new_question,
-            new_answer
+            conversation_history, new_question, new_answer
         )
 
         accessor = SaveConversationHistoryDAO()
-        accessor(
-            user_id,
-            conversation_id,
-            updated_conv_history
-        )
+        accessor(user_id, conversation_id, updated_conv_history)

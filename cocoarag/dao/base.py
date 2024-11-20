@@ -10,21 +10,21 @@ import psycopg
 
 
 class DAO:
-    """ Basic DAO implementation
-    """
+    """Basic DAO implementation"""
+
     def __init__(self, config_path="../configs/credits.yml"):
         self.config = self._load_config(config_path)
         self.embeddings = OpenAIEmbeddings(
             model=self.config.embeddings_model.open_ai.embed_model,
-            api_key=self.config.embeddings_model.open_ai.token
+            api_key=self.config.embeddings_model.open_ai.token,
         )
-        self.connection_string = self.config['database']['connection_string']
+        self.connection_string = self.config["database"]["connection_string"]
         self.connection_params = {
-            "dbname": self.config['database']['dbname'],
-            "user": self.config['database']['user'],
-            "password": self.config['database']['password'],
-            "host": self.config['database']['host'],
-            "port": self.config['database']['port']
+            "dbname": self.config["database"]["dbname"],
+            "user": self.config["database"]["user"],
+            "password": self.config["database"]["password"],
+            "host": self.config["database"]["host"],
+            "port": self.config["database"]["port"],
         }
 
     def _load_config(self, path) -> Box:

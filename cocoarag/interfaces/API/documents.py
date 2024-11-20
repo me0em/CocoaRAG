@@ -5,18 +5,12 @@ import fastapi
 from cocoarag.use_cases.documents import AddDocumentAPIUseCase
 
 
-router = fastapi.APIRouter(
-    tags=["documents"],
-    prefix="/documents"
-)
+router = fastapi.APIRouter(tags=["documents"], prefix="/documents")
 
 
 @router.post("/add")
 async def add_document(
-    user_id: str,
-    user_group: str,
-    file: fastapi.UploadFile,
-    metadata: str
+    user_id: str, user_group: str, file: fastapi.UploadFile, metadata: str
 ):
     print(metadata)
 
@@ -32,11 +26,8 @@ async def add_document(
             user_group=user_group,
             filename=file.filename,
             metadata=metadata,
-            file_content=content
+            file_content=content,
         )
         return {"status": "success"}
     except Exception as e:
-        raise fastapi.HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
+        raise fastapi.HTTPException(status_code=500, detail=str(e))

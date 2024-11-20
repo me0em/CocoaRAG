@@ -17,32 +17,26 @@ metadata = {
     "document_id": document_id,
     "user_id": user_id,
     "topic": "test",
-    "location": "Boston"
+    "location": "Boston",
 }
 
 with open(f"{files_dir_path}/{filename}", "r") as file:
     content: bytes = file.read().encode("utf-8")
 
-files = {
-    "file": (filename, content, "text/plain")
-}
+files = {"file": (filename, content, "text/plain")}
 
 # data = json.dumps(metadata)
 
 params = {
     "user_id": user_id,
     "user_group": user_group,
-    "metadata": json.dumps(metadata)
+    "metadata": json.dumps(metadata),
 }
 
 url = "http://127.0.0.1:8000/documents/add/"
 
 
-response = requests.post(
-    url,
-    params=params,
-    files=files
-)
+response = requests.post(url, params=params, files=files)
 
 print(response.status_code)
 print(response.json())

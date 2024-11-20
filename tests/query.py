@@ -17,18 +17,12 @@ payload = {
     "user_id": user_id,
     "user_group": user_group,
     "conversation_id": conversation_id,
-    "query": {
-        "trace_id": trace_id,
-        "content": raw_query
-    }
+    "query": {"trace_id": trace_id, "content": raw_query},
 }
 
 url = "http://127.0.0.1:8000/query"
 
-response = requests.post(
-    url,
-    json=payload
-)
+response = requests.post(url, json=payload)
 
 print(f"Status Code: {response.status_code}")
 print("Answer:")

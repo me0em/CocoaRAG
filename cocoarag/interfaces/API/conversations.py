@@ -1,18 +1,8 @@
-import json
-
 from pydantic import BaseModel
 import fastapi
 
-from cocoarag.use_cases.conversations import (
-    GetAllConversationsAPIUseCase,
-    GetConversationAPIUseCase
-)
 
-
-router = fastapi.APIRouter(
-    tags=["conversations"],
-    prefix="/conversations"
-)
+router = fastapi.APIRouter(tags=["conversations"], prefix="/conversations")
 
 
 class ConversationsList(BaseModel):
@@ -23,8 +13,7 @@ class ConversationsList(BaseModel):
 async def list_converstions(
     user_id: str,
 ) -> ConversationsList:
-    """ Return all conversation ids by user_id
-    """
+    """Return all conversation ids by user_id"""
     try:
         ...
 
@@ -33,18 +22,14 @@ async def list_converstions(
         return conversations
 
     except Exception as e:
-        raise fastapi.HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
+        raise fastapi.HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/conversation")
 async def get_converstions(
     conversation_id: str,
 ) -> str:
-    """ Return conversation by conversation id as serialized json
-    """
+    """Return conversation by conversation id as serialized json"""
     try:
         ...
 
@@ -53,7 +38,4 @@ async def get_converstions(
         return conversation
 
     except Exception as e:
-        raise fastapi.HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
+        raise fastapi.HTTPException(status_code=500, detail=str(e))

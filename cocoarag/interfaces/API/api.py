@@ -1,16 +1,10 @@
 import fastapi
 
-from cocoarag.interfaces.API import (
-    documents,
-    users,
-    queries
-)
+from cocoarag.interfaces.API import documents, users, queries
 
 
 app = fastapi.FastAPI(
-    title="CocoaRAGEndpoints",
-    version="1.0",
-    description="REST API Backend"
+    title="CocoaRAGEndpoints", version="1.0", description="REST API Backend"
 )
 
 app.include_router(documents.router)
