@@ -15,17 +15,11 @@ class GenerateQuestionService:
 
         self.model = get_model("gpt-4o-mini")
 
-    def __call__(self,
-                 facts: list[str],
-                 language: str = "ru") -> QueryModel:
-        """ Generate question based on provided chunks
-        """
+    def __call__(self, facts: list[str], language: str = "ru") -> QueryModel:
+        """Generate question based on provided chunks"""
 
         system_prompt: str = self.prompts.question_generation.get(language)
-        user_prompt: str = json.dumps(
-            {"Facts": facts},
-            ensure_ascii=False
-        )
+        user_prompt: str = json.dumps({"Facts": facts}, ensure_ascii=False)
 
         parser = CustomJSONParser()
 
@@ -43,10 +37,7 @@ class GenerateQuestionService:
 
 if __name__ == "__main__":
 
-    facts = [
-        "Линкольн был выдающимся оратором.",
-        "Речи Линкольна вдохновляли северян."
-    ]
+    facts = ["Линкольн был выдающимся оратором.", "Речи Линкольна вдохновляли северян."]
 
     service = GenerateQuestionService()
     question: str = service(facts=facts, language="ru")

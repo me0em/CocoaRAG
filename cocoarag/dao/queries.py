@@ -9,9 +9,8 @@ from cocoarag.models.queries import QueryModel
 
 
 class GetConversationHistoryDAO(DAO):
-    def __call__(self,
-                 conversation_id: str) -> list[Optional[dict | None]]:
-        """ Get conversation history, return empty list
+    def __call__(self, conversation_id: str) -> list[Optional[dict | None]]:
+        """Get conversation history, return empty list
         if does not exist
         """
         select_conversation_sql = """
@@ -35,11 +34,8 @@ class GetConversationHistoryDAO(DAO):
 
 
 class SaveConversationHistoryDAO(DAO):
-    def __call__(self,
-                 user_id: str,
-                 conversation_id: str,
-                 content: dict) -> None:
-        """ Save conversation into table 'conversations'.
+    def __call__(self, user_id: str, conversation_id: str, content: dict) -> None:
+        """Save conversation into table 'conversations'.
         The query uses INSERT INTO ... ON CONFLICT (conversation_id) DO UPDATE,
         which allows to add a new conversation and, if a conversation with that
         conversation_id already exists, update the content field.
@@ -62,7 +58,7 @@ class SaveConversationHistoryDAO(DAO):
                 with conn.cursor() as cur:
                     cur.execute(
                         insert_conversation_sql,
-                        (conversation_id, user_id, Jsonb(content))
+                        (conversation_id, user_id, Jsonb(content)),
                     )
                     conn.commit()
         except Exception as e:
@@ -71,16 +67,13 @@ class SaveConversationHistoryDAO(DAO):
 
 
 class SimilaritySearchDAO(DAO):
-    """ Extract chunk from vector store
-    """
-    def __call__(self,
-                 query: QueryModel,
-                 filters: FiltersModel,
-                 k: Optional[int] = None) -> list[ChunkModel]:
+    """Extract chunk from vector store"""
+
+    def __call__(
+        self, query: QueryModel, filters: FiltersModel, k: Optional[int] = None
+    ) -> list[ChunkModel]:
         # collection_name is a general collection name from config
-        vector_store = self.get_vector_store(
-            self.config.quering.basic_collection_name
-        )
+        vector_store = self.get_vector_store(self.config.quering.basic_collection_name)
 
         if k is None:
             k = self.config.quering.k
@@ -99,7 +92,7 @@ class SimilaritySearchDAO(DAO):
                 file_name=doc.metadata.get("filename", "Error"),
                 content=doc.page_content.encode("utf-8"),
                 metadata=doc.metadata,
-                score=score
+                score=score,
             )
 
             chunks.append(chunk)
@@ -111,10 +104,7 @@ if __name__ == "__main__":
     from uuid import uuid4
 
     str_query = "What happend to King?"
-    query = QueryModel(
-        trace_id=uuid4().hex,
-        content=str_query
-    )
+    query = QueryModel(trace_id=uuid4().hex, content=str_query)
 
     accessor = SimilaritySearchDAO()
     chunks = accessor(query=query, filters={})

@@ -1,0 +1,22 @@
+repos:
+  - repo: local
+    hooks:
+      - id: format
+        name: Formatting checks
+        entry: make format
+        language: system
+        types: [python]
+        files: \.py$
+
+      - id: lint
+        name: Linting checks
+        entry: make lint
+        language: system
+        types: [python]
+        files: \.py$
+
+      - id: test
+        name: Tests
+        entry: make test
+        language: system
+        types: [python]

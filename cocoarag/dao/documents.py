@@ -9,10 +9,7 @@ from cocoarag.dao.base import DAO
 
 
 class AddChunksToVectorStoreDAO(DAO):
-    def __call__(self,
-                 user_id: str,
-                 user_group: str,
-                 chunks: list[ChunkModel]) -> None:
+    def __call__(self, user_id: str, user_group: str, chunks: list[ChunkModel]) -> None:
         """Add chunks to the vector store.
         Use with `AddDocumentRelationDAO` to have full information
         about parent document
@@ -30,15 +27,13 @@ class AddChunksToVectorStoreDAO(DAO):
         ]
 
         vector_store.add_documents(
-            langchain_docs,
-            ids=[doc.metadata["chunk_id"] for doc in langchain_docs]
+            langchain_docs, ids=[doc.metadata["chunk_id"] for doc in langchain_docs]
         )
 
 
 class GetAllDocumentsByUserIDDAO(DAO):
-    def __call__(self,
-                 user_id: str) -> list[DocumentModel]:
-        """ Get all documents by user id, in this
+    def __call__(self, user_id: str) -> list[DocumentModel]:
+        """Get all documents by user id, in this
         function we return documents raw content too
         """
         get_documents_sql = f"""
@@ -51,20 +46,20 @@ class GetAllDocumentsByUserIDDAO(DAO):
                 with conn.cursor() as cur:
                     cur.execute(get_documents_sql)
                     documents = cur.fetchall()
-                    print(f"{len(documents)} documents successfully extracted for {user_id}")
+                    print(
+                        f"{len(documents)} documents successfully extracted for {user_id}"
+                    )
                     return documents
         except Exception as e:
             print(f"Error extracting document_id: {e}")
 
 
 class AddDocumentRelationDAO(DAO):
-    """ Add document id, name, content and metadata
-        into dedicated table
+    """Add document id, name, content and metadata
+    into dedicated table
     """
-    def __call__(self,
-                 user_id: str,
-                 user_group: str,
-                 document: DocumentModel) -> None:
+
+    def __call__(self, user_id: str, user_group: str, document: DocumentModel) -> None:
         # SQL command to insert data into the table
         insert_data_sql = """
         INSERT INTO documents
@@ -76,34 +71,42 @@ class AddDocumentRelationDAO(DAO):
             # Connect to the PostgreSQL database
             with psycopg.connect(**self.connection_params) as conn:
                 with conn.cursor() as cur:
-                    cur.execute(insert_data_sql,
-                                (document.metadata["document_id"],
-                                 user_id,
-                                 user_group,
-                                 document.file_name,
-                                 document.content,
-                                 Jsonb(document.metadata)))
+                    cur.execute(
+                        insert_data_sql,
+                        (
+                            document.metadata["document_id"],
+                            user_id,
+                            user_group,
+                            document.file_name,
+                            document.content,
+                            Jsonb(document.metadata),
+                        ),
+                    )
                     conn.commit()
-                    print(f"Document inserted successfully with id: {document.metadata['document_id']}")
+                    print(
+                        f"Document inserted successfully with id: {document.metadata['document_id']}"
+                    )
         # except Exception as e:
-            # print(f"Error inserting document: {e}")
+        # print(f"Error inserting document: {e}")
 
 
 class RemoveDocumentDAO(DAO):
-    """ Remove document from documents & langchain_pg_collection
-    """
-    def __call__(self,
-                 document_id: str) -> None:
+    """Remove document from documents & langchain_pg_collection"""
+
+    def __call__(self, document_id: str) -> None:
         remove_from_documents_table_sql = f"""
             DELETE FROM documents
             WHERE document_id = '{document_id}';
         """
 
         jsonable_field = json.dumps({"document_id": document_id})
-        remove_from_pg_embedding_sql = """
+        remove_from_pg_embedding_sql = (
+            """
             DELETE FROM langchain_pg_embedding
             WHERE cmetadata @> '%s';
-        """ % jsonable_field
+        """
+            % jsonable_field
+        )
 
         try:
             # Connect to the PostgreSQL database

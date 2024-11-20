@@ -10,7 +10,7 @@ from langchain_openai import ChatOpenAI
 class CustomJSONParser(StrOutputParser):
     def parse(self, text: str) -> dict:
         # Regular expression to find JSON content within triple backticks
-        json_pattern = re.compile(r'```json\s*(.*?)\s*```', re.DOTALL)
+        json_pattern = re.compile(r"```json\s*(.*?)\s*```", re.DOTALL)
         match = json_pattern.search(text)
 
         if match:
@@ -28,7 +28,7 @@ class CustomJSONParser(StrOutputParser):
 def get_model(model_name: str) -> BaseChatModel:
     rate_limiter = InMemoryRateLimiter(
         requests_per_second=2,  # 1 req every 500ms
-        check_every_n_seconds=0.1  # check every 100ms
+        check_every_n_seconds=0.1,  # check every 100ms
     )
 
     # Attention: I use highest API plan now

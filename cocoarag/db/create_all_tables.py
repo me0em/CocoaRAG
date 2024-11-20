@@ -6,7 +6,7 @@ connection_params = {
     "user": "langchain",
     "password": "langchain",
     "host": "localhost",
-    "port": "6024"
+    "port": "6024",
 }
 
 

@@ -2,17 +2,13 @@
 from uuid import uuid4
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import TextLoader
 
 from cocoarag.dao.documents import (
     AddChunksToVectorStoreDAO,
     AddDocumentRelationDAO,
-    RemoveDocumentDAO
+    RemoveDocumentDAO,
 )
-from cocoarag.models.documents import (
-    DocumentModel,
-    ChunkModel
-)
+from cocoarag.models.documents import DocumentModel, ChunkModel
 from cocoarag.models.filters import FiltersModel
 from cocoarag.models.queries import QueryModel
 from cocoarag.services.facts import ExtractFactsService
@@ -20,66 +16,50 @@ from cocoarag.dao.queries import SimilaritySearchDAO
 
 
 class GetAllDocumentChunksService:
-    def __call__(self,
-                 document_id: str,
-                 trace_id: str) -> list[ChunkModel]:
+    def __call__(self, document_id: str, trace_id: str) -> list[ChunkModel]:
 
-        query = QueryModel(
-            trace_id=trace_id,
-            content="Any text here, k = 1e+6"
-        )
+        query = QueryModel(trace_id=trace_id, content="Any text here, k = 1e+6")
 
-        filters = FiltersModel(
-            content={
-                "document_id": {
-                    "$in": [document_id]
-                }
-            }
-        )
+        filters = FiltersModel(content={"document_id": {"$in": [document_id]}})
 
         accessor = SimilaritySearchDAO()
-        chunks = accessor(
-            query=query,
-            filters=filters,
-            k=1e+6
-        )
+        chunks = accessor(query=query, filters=filters, k=1e6)
 
         return chunks
 
 
 class SplitTextRecursivelyService:
-    """ Wrapper around basic langchain splitter
-    """
-    def __init__(self,
-                 chunk_size=200,
-                 chunk_overlap=20,
-                 length_function=len,
-                 is_separator_regex=False):
+    """Wrapper around basic langchain splitter"""
+
+    def __init__(
+        self,
+        chunk_size=200,
+        chunk_overlap=20,
+        length_function=len,
+        is_separator_regex=False,
+    ):
         self.splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
             length_function=length_function,
-            is_separator_regex=is_separator_regex
+            is_separator_regex=is_separator_regex,
         )
 
-    def __call__(self,
-                 document: DocumentModel) -> list[ChunkModel]:
-        texts = self.splitter.create_documents(
-            [document.content.decode("utf-8")]
-        )
+    def __call__(self, document: DocumentModel) -> list[ChunkModel]:
+        texts = self.splitter.create_documents([document.content.decode("utf-8")])
 
         chunks = []
         for idx, text in enumerate(texts):
             chunk = ChunkModel(
                 trace_id=document.trace_id,
                 file_name=document.file_name,
-                content=text.page_content.encode('utf-8'),
+                content=text.page_content.encode("utf-8"),
                 metadata={
                     "chunk_id": uuid4().hex,
                     "index": idx,
                     # document_id (relation on real document) is here
-                    **document.metadata
-                }
+                    **document.metadata,
+                },
             )
 
             chunks.append(chunk)
@@ -88,7 +68,7 @@ class SplitTextRecursivelyService:
 
 
 class AddDocumentService:
-    """ Add document to the RAG system.
+    """Add document to the RAG system.
 
     Services called inside:
     - SplitTextRecursivelyService
@@ -97,10 +77,8 @@ class AddDocumentService:
     - AddDocumentRelationDAO
     - AddChunksToVectorStoreDAO
     """
-    def __call__(self,
-                 user_id: str,
-                 user_group: str,
-                 document: DocumentModel) -> None:
+
+    def __call__(self, user_id: str, user_group: str, document: DocumentModel) -> None:
         # we need user_id in metadata to pass it in chunks
         # to filter relevant content
         if "user_id" not in document.metadata:
@@ -113,8 +91,7 @@ class AddDocumentService:
 
         extractor = ExtractFactsService()
         query = QueryModel(
-            trace_id=document.trace_id,
-            content=document.content.decode("utf-8")
+            trace_id=document.trace_id, content=document.content.decode("utf-8")
         )
         raw_facts: list[str] = extractor(query)
 
@@ -126,37 +103,26 @@ class AddDocumentService:
                 trace_id=document.trace_id,
                 file_name=document.file_name,
                 content=raw_fact.encode("utf-8"),
-                metadata=metadata
+                metadata=metadata,
             )
 
             chunks.append(fact)
 
         # insert chunks to the table
         accessor = AddChunksToVectorStoreDAO()
-        accessor(
-            user_id=user_id,
-            user_group=user_group,
-            chunks=chunks
-        )
+        accessor(user_id=user_id, user_group=user_group, chunks=chunks)
 
         accessor = AddDocumentRelationDAO()
-        accessor(
-            user_id=user_id,
-            user_group=user_group,
-            document=document
-        )
+        accessor(user_id=user_id, user_group=user_group, document=document)
 
 
 class RemoveDocumentService:
-    """ Remove document from the RAG system.
-    """
-    def __call__(self,
-                 document_id: str) -> None:
+    """Remove document from the RAG system."""
+
+    def __call__(self, document_id: str) -> None:
         # delete document and all related embeddings
         accessor = RemoveDocumentDAO()
-        accessor(
-            document_id=document_id
-        )
+        accessor(document_id=document_id)
 
 
 if __name__ == "__main__":
@@ -194,10 +160,7 @@ if __name__ == "__main__":
     document_id = "3e6edbaa149f4cfb9958b5ef648a9f63"
 
     service = GetAllDocumentChunksService()
-    chunks: list[ChunkModel] = service(
-        document_id=document_id,
-        trace_id=uuid4().hex
-    )
+    chunks: list[ChunkModel] = service(document_id=document_id, trace_id=uuid4().hex)
 
     for chunk in chunks:
         print(f"• {chunk.content.decode('utf-8')}")

@@ -6,9 +6,7 @@ from cocoarag.models.queries import QueryModel, AnswerModel
 from cocoarag.models.filters import FiltersModel
 
 
-router = fastapi.APIRouter(
-    tags=["query"]
-)
+router = fastapi.APIRouter(tags=["query"])
 
 
 class QueryRequestModel(BaseModel):
@@ -19,11 +17,8 @@ class QueryRequestModel(BaseModel):
 
 
 @router.post("/query")
-async def query_rag_system(
-    request: QueryRequestModel
-) -> AnswerModel:
-    """ Query RAG system with different ids and text
-    """
+async def query_rag_system(request: QueryRequestModel) -> AnswerModel:
+    """Query RAG system with different ids and text"""
     try:
 
         print(f">>> Get new query: {request.query.content}")
@@ -36,12 +31,9 @@ async def query_rag_system(
             user_group=request.user_group,
             conversation_id=request.conversation_id,
             query=request.query,
-            filters=filters
+            filters=filters,
         )
         return answer
 
     except Exception as e:
-        raise fastapi.HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
+        raise fastapi.HTTPException(status_code=500, detail=str(e))
