@@ -1,6 +1,6 @@
 embeddings_model:
   open_ai:
-    token: "sk-proj-CaQmXdDzM5UocOhHH9a4T3BlbkFJGuQaDNYBmBj4i1hvkSBo"
+    token: "..."
     embed_model: "text-embedding-3-small"
 database:
   dbname: 'langchain'
@@ -15,7 +15,7 @@ quering:
   k: 10
 retrieve_model:
   open_ai:
-    token: "sk-proj-CaQmXdDzM5UocOhHH9a4T3BlbkFJGuQaDNYBmBj4i1hvkSBo"
+    token: "..."
     model: "gpt-4o-mini"
 conversations:
   trim_limit: 2
