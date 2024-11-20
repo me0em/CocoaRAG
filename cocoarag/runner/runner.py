@@ -55,7 +55,9 @@ class Runner(BaseModel):
         distributed.
 
         Args:
-            `min_x`: The max and min values for the x components of individual
+            `min`: The min values for the x components of individual
+            distributions.\n
+            `max`: The max values for the y components of individual
             distributions.\n
             `limit_y`: The max and min values for the y components of
             individual distributions.\n
@@ -129,9 +131,10 @@ class Runner(BaseModel):
         set of points.
 
         Args:
-            `bw_method`: Bandwidth method to used.\n
             `dataset`: The data that fits the kernel. It should be of
             shape (2, k).\n
+            `bw_method`: Bandwidth method to used.\n
+            `weights`: The weights for each index (if any).
         Returns:
             A fitted Gaussian kernel
         """
@@ -225,7 +228,9 @@ class Runner(BaseModel):
         Returns the maximum value of the density estimation
 
         Args:
-            `surface`: The density estimation surface.\n
+            `X`: X coordinates
+            `Y`: Y coordinates
+            `Z`: The density estimation surface.\n
             `all_points`: The points of the data that induced the KDE. It should
             be specified if `with_neighbors` is True.\n
             `with_neighbors`: If specified, it returns the neighbors of
