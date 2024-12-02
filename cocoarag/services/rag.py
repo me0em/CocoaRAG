@@ -134,6 +134,8 @@ class QueryRAGSystemService:
                 content={"user_id": {"$in": [user_id]}}
             )
 
+        print("Filters:", filters)
+
         chunks: list[ChunkModel] = service(
             user_id=user_id,
             group_id=group_id,

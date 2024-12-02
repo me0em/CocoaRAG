@@ -2,9 +2,8 @@ import json
 import requests
 from uuid import uuid4
 
-
-user_id = "f0e8d7fc-c9e3-442f-8f53-973c20b3729f"
-user_group = "acd4e4dd-5a62-46a0-aa93-f55365978384"
+user_id = "e0c659a922724cb8acedec7823a2fbd0"
+user_group = "248f006d18b64993a1fba9fa7d6ef1cb"
 
 trace_id = uuid4().hex
 document_id = uuid4().hex
@@ -37,6 +36,7 @@ params = {
 
 url = "http://127.0.0.1:8000/documents/add/"
 
+print("Ready to send the file")
 
 response = requests.post(
     url,
